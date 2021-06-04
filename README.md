@@ -1,12 +1,7 @@
 # MiningResume
 Script to extract certain fields from a text resume
-Copyright (C) 2017 Yogesh H Kulkarni
 
-## License:
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or any later version.
+Copyright (C) 2017 Yogesh H Kulkarni
 
 ## Requirements:
 * Problem Statement: Extracting certain important fields from a resume like name, email, phone,  etc.
