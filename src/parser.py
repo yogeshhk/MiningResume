@@ -3,37 +3,47 @@ import xml.etree.cElementTree as ET
 import re
 from collections import OrderedDict
 import json
+from os import path
+
+BASE_DIR = path.dirname(__file__)
+
+DATA_FOLDER = path.join(BASE_DIR, "data")
+CONFIG_FILE = path.join(BASE_DIR, "config.xml")
+
 
 ## Reader: ToDo: use another file reader.py to import various formats, convert to txt and clean docs, here, below
+
 def read_document(filepath):
     f = open(filepath)
     raw = f.read()
     f.close()
     return raw
 
+
 ### Extraction Methods, called by string "name" as specified in config
 
 # Regex based single value extractor
-def univalue_extractor( document, section, subterms_dict, parsed_items_dict ):
+def univalue_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
     retval = OrderedDict()
     get_section_lines = parsed_items_dict["Sections"].get(section)
     section_doc = "\n".join(get_section_lines)
     if section_doc != "NA":
-        for node_tag, pattern_list in subterms_dict.items():
+        for node_tag, pattern_list in sub_terms_dict.items():
             for pattern in pattern_list:
                 regex_pattern = re.compile(r"{}".format(pattern))
                 match = regex_pattern.search(section_doc)
-                if match != None and len(match.groups()) > 0 and match.group(1) != "":
+                if match is not None and len(match.groups()) > 0 and match.group(1) != "":
                     retval[node_tag] = match.group(1)
                     break
     return retval
 
+
 # Section Information value extractor
-def section_value_extractor( document, section, subterms_dict, parsed_items_dict ):
+def section_value_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
     retval = OrderedDict()
     single_section_lines = parsed_items_dict["Sections"].get(section)
     for line in single_section_lines:
-        for node_tag, pattern_string in subterms_dict.items():
+        for node_tag, pattern_string in sub_terms_dict.items():
             pattern_list = re.split(r",|:", pattern_string[0])
             matches = [pattern for pattern in pattern_list if pattern in line]
             if len(matches):
@@ -46,34 +56,38 @@ def section_value_extractor( document, section, subterms_dict, parsed_items_dict
                 break
     return retval
 
+
 # Find if new section has started
-def is_new_section(line,subterms_dict):
+def is_new_section(line, sub_terms_dict):
     new_section = ""
     first_word_of_line = ""
     regex_pattern = re.compile(r"^[\s]?(\w+)?[:|\s]")
     match = regex_pattern.search(line)
-    if match != None and len(match.groups()) > 0 and match.group(1) != "":
+    if match is not None and len(match.groups()) > 0 and match.group(1) != "":
         first_word_of_line = match.group(1)
-        if first_word_of_line != None:
-            for node_tag, pattern_list in subterms_dict.items():
+        if first_word_of_line is not None:
+            for node_tag, pattern_list in sub_terms_dict.items():
                 for pattern in pattern_list:
                     if first_word_of_line in pattern:
                         new_section = node_tag
     return new_section
 
-# Segementation into sections, a sentence collector
+
+# Segmentation into sections, a sentence collector
 '''
 Read line by line
-Get first token, send it to section_finder(token, subterm_dict),returns section node_tag or ""
+Get first token, send it to section_finder(token, sub_term_dict),returns section node_tag or ""
 Once section is found, make it current_section, and add sentences to it till, a next section is found
 '''
-def section_extractor( document, section, subterms_dict,parsed_items_dict ):
+
+
+def section_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
     retval = OrderedDict()
-    if document != "NA":
+    if resume_text != "NA":
         current_section = ""
-        lines = re.split(r'[\n\r]+', document)
+        lines = re.split(r'[\n\r]+', resume_text)
         for line in lines:
-            new_section = is_new_section(line, subterms_dict)
+            new_section = is_new_section(line, sub_terms_dict)
             if new_section != "":
                 current_section = new_section
                 continue
@@ -81,13 +95,13 @@ def section_extractor( document, section, subterms_dict,parsed_items_dict ):
 
     return retval
 
-#read config and store in equivalent internal list-of-dictionaries structure. No processing-parsing.
-def read_config( configfile ):
 
+# read config and store in equivalent internal list-of-dictionaries structure. No processing-parsing.
+def read_config(configfile):
     tree = ET.parse(configfile)
     root = tree.getroot()
 
-    config = []
+    config_element = []
     for child in root:
         term = OrderedDict()
         term["Term"] = child.get('name', "")
@@ -97,50 +111,46 @@ def read_config( configfile ):
             for level2 in level1:
                 term[level2.tag] = term.get(level2.tag, []) + [level2.text]
 
-        config.append(term)
-    jason_result = json.dumps(config, indent=4)
+        config_element.append(term)
+    jason_result = json.dumps(config_element, indent=4)
     # print("Specifications:\n {}".format(jason_result))
-    return config
+    return config_element
 
-# Processes docuemtn as per specifications in config and returns result in dictionary
-def parse_document(document, config):
+
+# Processes document as per specifications in config and returns result in dictionary
+def parse_document(resume_text, regex_config):
     parsed_items_dict = OrderedDict()
 
-    for term in config:
+    for term in regex_config:
         term_name = term.get('Term')
         extraction_method = term.get('Method')
         extraction_method_ref = globals()[extraction_method]
-        section = term.get("Section") # Optional
-        subterms_dict = OrderedDict()
-        for node_tag, pattern_list in term.items()[3:]:
-            subterms_dict[node_tag] = pattern_list
-        parsed_items_dict[term_name] = extraction_method_ref(document, section, subterms_dict, parsed_items_dict)
+        section = term.get("Section")  # Optional
+        sub_term_dict = OrderedDict()
+        list_of_paras = list(term.items())
+        for node_tag, pattern_list in list_of_paras[3:]:
+            sub_term_dict[node_tag] = pattern_list
+        parsed_items_dict[term_name] = extraction_method_ref(resume_text, section, sub_term_dict, parsed_items_dict)
 
     # key of section extractors is not to be printed
     del parsed_items_dict["Sections"]
     return parsed_items_dict
 
-###### MAIN ##############
 
-if len(sys.argv) != 3:
-    print("Usage: parser <configfile> <datafilesfolder>")
-    sys.exit(0)
+if __name__ == "__main__":
 
-final_result = []
+    final_result = []
 
-configfile = "./" + sys.argv[1]
-config = read_config(configfile)
+    config = read_config(CONFIG_FILE)
 
-datafilesdir = "./" + sys.argv[2] + "/"
-docs = os.listdir(datafilesdir)
+    docs = os.listdir(DATA_FOLDER)
 
-for filename in docs:
-    if os.path.isfile(datafilesdir + filename):
-        document = read_document(datafilesdir + filename)
-        result = parse_document(document, config)
-        final_result.append(result)
+    for filename in docs:
+        full_filename = path.join(DATA_FOLDER, filename)
+        if os.path.isfile(full_filename):
+            document = read_document(full_filename)
+            result = parse_document(document, config)
+            final_result.append(result)
 
-jason_result = json.dumps(final_result, indent=4)
-print("Final Result:\n {}".format(jason_result))
-
-
+    jason_result = json.dumps(final_result, indent=4)
+    print("Final Result:\n {}".format(jason_result))
