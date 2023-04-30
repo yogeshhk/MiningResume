@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {% block head %}
+    <!-- <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    /> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <title>{% block title %}{% endblock %}</title>
+    {% endblock %}
+  </head>
+  <body>
+    {% block main %}{% endblock %}
+  </body>
+</html>
