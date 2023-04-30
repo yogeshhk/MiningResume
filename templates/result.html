@@ -2,7 +2,7 @@
 {% block title %}Mining Resume{% endblock %} 
 
 {% block main %}
-    <div class="h-screen w-full bg-blue-300 flex items-center justify-center">
+    <div class="min:h-screen py-5 w-full bg-blue-300 flex items-center justify-center">
         <div class="bg-white max:w-1/2 px-10 py-6 rounded shadow-lg text-center">
             <table class="table-auto w-full ">
                 <!-- <thead>
@@ -16,7 +16,7 @@
                  <tr >
                      <td class="font-bold px-4"> {{ name }} </td>
                      <td class="my-5"> 
-                        <table class="table-auto border-collapse border-slate-700 w-full">
+                        <table class="table-auto border-collapse border-slate-700 w-full mt-5">
                             <tbody>
                                 {% for key, value in data.items() %}
                                     <tr class="text-left my-2">

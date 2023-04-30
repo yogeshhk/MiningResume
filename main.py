@@ -19,14 +19,26 @@ def allowed_file(filename):
 @app.route("/",methods=["GET","POST"])
 def parse_file():
     if request.method == "POST":
-        file = (request.files.get("file"))
-        if file and allowed_file(file.filename):
-            file_path = TEMP_DIR / file.filename
-            file.save(file_path)
-            config = read_config(CONFIG_FILE)
-            document = read_document(file_path)
-            result = parse_document(document, config)
-            return render_template("result.html",result=result)
+        directory = (request.files.getlist("file"))
+        results= {}
+        try:
+            if directory[0].filename:
+                for file in directory: 
+                    if file and allowed_file(file.filename):
+                        file_path = TEMP_DIR / pathlib.Path(file.filename)
+                        file_path.parent.mkdir(parents=True, exist_ok=True)
+                        file.save(file_path)
+                        config = read_config(CONFIG_FILE)
+                        document = read_document(file_path)
+
+                        result = parse_document(document, config)
+                        results[file_path.name] ={}
+                        for key,value in result.items():
+                            results[file_path.name].update(value)
+                return render_template("result.html",result=results)
+            return render_template("main.html",error="Please select a valid Directory")
+        except:
+            return render_template("main.html",error="Something Went Wrong. Please try again.")
 
     return render_template("main.html")
 
