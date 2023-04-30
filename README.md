@@ -18,5 +18,12 @@ Copyright (C) 2017 Yogesh H Kulkarni
 * Prepare your own config.xml similar to the given one. 
 * Run "python parser.py"
 
+## How to Run GUI:
+* Install requirements
+  ```
+  pip install -r requirements.txt
+  ```
+* Run "python main.py"
+
 ## Disclaimer:
 * Author (yogeshkulkarni@yahoo.com) gives no guarantee of the results of the program. It is just a fun script. Lot of improvements are still to be made. So, don’t depend on it at all.
