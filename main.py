@@ -25,9 +25,8 @@ def parse_file():
             file.save(file_path)
             config = read_config(CONFIG_FILE)
             document = read_document(file_path)
-            
             result = parse_document(document, config)
-            print(result)
+            return render_template("result.html",result=result)
 
     return render_template("main.html")
 
