@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {% block head %}
+    <!-- <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    /> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+    <title>{% block title %}{% endblock %}</title>
+    {% endblock %}
+  </head>
+  <body>
+    {% block main %}{% endblock %}
+  </body>
+</html>

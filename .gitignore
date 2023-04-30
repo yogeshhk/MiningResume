@@ -3,3 +3,7 @@ __pycache__/
 .git/
 .idea/
 models/
+venv/
+node_modules/
+package-lock.json
+tailwind.config.js
