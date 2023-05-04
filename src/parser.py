@@ -12,11 +12,6 @@ DATA_FOLDER = path.join(BASE_DIR, "data")
 CONFIG_FILE = path.join(BASE_DIR, "config.xml")
 
 
-## Reader: ToDo: use another file reader.py to import various formats, convert to txt and clean docs, here, below
-
-############## CODE ###################
-
-#Create a pdf_to_txt() function
 def pdf_to_txt(filepath):
     pdfFile = open(filepath, "rb")  # Open resume.pdf as rb, store it in pdfFile variable
     pdfReader = PyPDF2.PdfFileReader(pdfFile)  # Reads the file using PdfFileReader from PyPDF2
@@ -27,7 +22,7 @@ def pdf_to_txt(filepath):
         raw += text
     return raw
 
-#########################################
+
 def read_document(filepath):
     extension = os.path.splitext(filepath)[1]
     raw = None
@@ -38,6 +33,7 @@ def read_document(filepath):
     elif extension == ".pdf":
         raw = pdf_to_txt(filepath)
     return raw
+
 
 def univalue_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
     retval = OrderedDict()
