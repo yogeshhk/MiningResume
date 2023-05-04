@@ -4,6 +4,7 @@ import re
 from collections import OrderedDict
 import json
 from os import path
+import PyPDF2
 
 BASE_DIR = path.dirname(__file__)
 
@@ -13,16 +14,31 @@ CONFIG_FILE = path.join(BASE_DIR, "config.xml")
 
 ## Reader: ToDo: use another file reader.py to import various formats, convert to txt and clean docs, here, below
 
-def read_document(filepath):
-    f = open(filepath)
-    raw = f.read()
-    f.close()
+############## CODE ###################
+
+#Create a pdf_to_txt() function
+def pdf_to_txt(filepath):
+    pdfFile = open(filepath, "rb")  # Open resume.pdf as rb, store it in pdfFile variable
+    pdfReader = PyPDF2.PdfFileReader(pdfFile)  # Reads the file using PdfFileReader from PyPDF2
+    raw = ""
+    for index in range(len(pdfReader.pages)):
+        page = pdfReader.getPage(index)  # Get the number of pages
+        text = page.extractText()  # Extract the text on every page
+        raw += text
     return raw
 
+#########################################
+def read_document(filepath):
+    extension = os.path.splitext(filepath)[1]
+    raw = None
+    if extension == ".txt":
+        f = open(filepath)
+        raw = f.read()
+        f.close()
+    elif extension == ".pdf":
+        raw = pdf_to_txt(filepath)
+    return raw
 
-### Extraction Methods, called by string "name" as specified in config
-
-# Regex based single value extractor
 def univalue_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
     retval = OrderedDict()
     get_section_lines = parsed_items_dict["Sections"].get(section)
