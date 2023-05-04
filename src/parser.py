@@ -118,10 +118,10 @@ def read_config(configfile):
 
 
 # Processes document as per specifications in config and returns result in dictionary
-def parse_document(resume_text, regex_config):
+def parse_document(resume_text, resume_config):
     parsed_items_dict = OrderedDict()
 
-    for term in regex_config:
+    for term in resume_config:
         term_name = term.get('Term')
         extraction_method = term.get('Method')
         extraction_method_ref = globals()[extraction_method]
