@@ -14,11 +14,11 @@ CONFIG_FILE = path.join(BASE_DIR, "config.xml")
 
 def pdf_to_txt(filepath):
     pdfFile = open(filepath, "rb")  # Open resume.pdf as rb, store it in pdfFile variable
-    pdfReader = PyPDF2.PdfFileReader(pdfFile)  # Reads the file using PdfFileReader from PyPDF2
+    pdfReader = PyPDF2.PdfReader(pdfFile)  # Reads the file using PdfFileReader from PyPDF2
     raw = ""
     for index in range(len(pdfReader.pages)):
-        page = pdfReader.getPage(index)  # Get the number of pages
-        text = page.extractText()  # Extract the text on every page
+        page = pdfReader.pages[index]  # Get the number of pages
+        text = page.extract_text()  # Extract the text on every page
         raw += text
     return raw
 
