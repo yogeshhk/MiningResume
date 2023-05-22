@@ -5,13 +5,12 @@ from langchain.chains import LLMChain, SimpleSequentialChain  # import LangChain
 from langchain.llms import OpenAI, HuggingFaceHub  # import OpenAI model
 from langchain.prompts import PromptTemplate  # import PromptTemplate
 
-# llm = OpenAI(
-#     # model_name="text-ada-001",
-#     temperature=0,
-#     # max_tokens=2000,
-# )
+llm = OpenAI(
+    model_name="text-curie-001",
+    temperature=0,
+)
 
-llm = HuggingFaceHub(repo_id="bigscience/bloom", model_kwargs={"temperature": 1e-10})
+# llm = HuggingFaceHub(repo_id="bigscience/bloom", model_kwargs={"temperature": 1e-10})
 
 attributes_list = ["Name", "Email", "Address", "Phone Number", "Objective", "Skills", "Employment History",
                    "Education History", "Accomplishments"]
