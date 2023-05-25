@@ -1,19 +1,25 @@
-import os, PyPDF2
-
-
+import os, PyPDF2, docx2txt
 from langchain.chains import LLMChain, SimpleSequentialChain  # import LangChain libraries
 from langchain.llms import OpenAI, HuggingFaceHub  # import OpenAI model
 from langchain.prompts import PromptTemplate  # import PromptTemplate
+
+# Use any one of the following
+# llm = HuggingFaceHub(repo_id="bigscience/bloom", model_kwargs={"temperature": 1e-10})
 
 llm = OpenAI(
     model_name="text-curie-001",
     temperature=0,
 )
 
-# llm = HuggingFaceHub(repo_id="bigscience/bloom", model_kwargs={"temperature": 1e-10})
-
 attributes_list = ["Name", "Email", "Address", "Phone Number", "Objective", "Skills", "Employment History",
                    "Education History", "Accomplishments"]
+
+
+def docx_to_txt(file_doc_path):
+    doc = docx2txt.process(file_doc_path)
+    raw = ""
+    raw += doc
+    return raw
 
 
 def pdf_to_txt(file_path):
@@ -30,20 +36,20 @@ def pdf_to_txt(file_path):
 def main(file_path):
     parsed_resumes = []
     for filename in os.listdir(file_path):
-        extension = os.path.splitext(filename)[1]  # Check the extension of each individual file
+        extension = os.path.splitext(filename)[1]
         resume_text = None
         if extension == ".txt":
             with open(os.path.join(file_path, filename), 'r') as file:
                 resume_text = file.read()
-
         elif extension == ".pdf":
-            resume_text = pdf_to_txt(os.path.join(file_path, filename))  # Pass the full file path to pdf_to_txt()
+            resume_text = pdf_to_txt(os.path.join(file_path, filename))
+        elif extension == ".docx":
+            resume_text = docx_to_txt(os.path.join(file_path, filename))  # Pass the full file path to docx_to_txt()
 
         if resume_text:
             parsed_info = parse_resume_by_llm(resume_text)
             parsed_resumes.append(parsed_info)
     return parsed_resumes
-
 
 def parse_resume_by_llm(text):
     parsed_info = []
@@ -68,4 +74,5 @@ def parse_resume_by_llm(text):
 if __name__ == "__main__":
     resume_folder = "data"
     results = main(resume_folder)
-    print(results)
+    print("Final Result:\n {}".format(results))
+
