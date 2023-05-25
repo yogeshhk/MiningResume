@@ -1,38 +1,9 @@
-import os, sys
-import xml.etree.cElementTree as ET
-import re
-from collections import OrderedDict
 import json
-from os import path
-import PyPDF2
+import re
+import xml.etree.cElementTree as ET
+from collections import OrderedDict
 
-BASE_DIR = path.dirname(__file__)
-
-DATA_FOLDER = path.join(BASE_DIR, "data")
-CONFIG_FILE = path.join(BASE_DIR, "config.xml")
-
-
-def pdf_to_txt(filepath):
-    pdfFile = open(filepath, "rb")  # Open resume.pdf as rb, store it in pdfFile variable
-    pdfReader = PyPDF2.PdfReader(pdfFile)  # Reads the file using PdfFileReader from PyPDF2
-    raw = ""
-    for index in range(len(pdfReader.pages)):
-        page = pdfReader.pages[index]  # Get the number of pages
-        text = page.extract_text()  # Extract the text on every page
-        raw += text
-    return raw
-
-
-def read_document(filepath):
-    extension = os.path.splitext(filepath)[1]
-    raw = None
-    if extension == ".txt":
-        f = open(filepath)
-        raw = f.read()
-        f.close()
-    elif extension == ".pdf":
-        raw = pdf_to_txt(filepath)
-    return raw
+from file_operations import read_data, DATA_FOLDER, CONFIG_FILE
 
 
 def univalue_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
@@ -154,15 +125,12 @@ if __name__ == "__main__":
     final_result = []
 
     config = read_config(CONFIG_FILE)
+    docs_dicts = read_data(DATA_FOLDER)
 
-    docs = os.listdir(DATA_FOLDER)
-
-    for filename in docs:
-        full_filename = path.join(DATA_FOLDER, filename)
-        if os.path.isfile(full_filename):
-            document = read_document(full_filename)
-            result = parse_document(document, config)
-            final_result.append(result)
+    for doc_dict in docs_dicts:
+        result = parse_document(doc_dict['resume_text'], config)
+        result['filename'] = doc_dict['filename']
+        final_result.append(result)
 
     jason_result = json.dumps(final_result, indent=4)
     print("Final Result:\n {}".format(jason_result))
