@@ -20,7 +20,7 @@ importlib-metadata==6.6.0
 itsdangerous==2.1.2
 Jinja2==3.1.2
 kor==0.9.2
-langchain==0.0.236
+langchain==0.0.308
 MarkupSafe==2.1.2
 marshmallow==3.19.0
 marshmallow-enum==1.5.1
