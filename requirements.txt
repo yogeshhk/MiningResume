@@ -45,6 +45,6 @@ tqdm==4.65.0
 typing-inspect==0.8.0
 typing_extensions==4.5.0
 urllib3==2.0.7
-Werkzeug==2.3.4
+Werkzeug==3.0.1
 yarl==1.9.2
 zipp==3.15.0
