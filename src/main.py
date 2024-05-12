@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, request, flash, redirect
-from parser import CONFIG_FILE, parse_document, read_config, read_document
+from parser_by_regex import CONFIG_FILE, parse_document, read_config, read_document
 from tempfile import TemporaryDirectory
 import pathlib
 
