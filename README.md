@@ -31,25 +31,30 @@ This repository contains programs to extract relevant fields from resumes and op
 
 ## TODO
 
-### Phase 2: `parser_by_spacy.py`
-
+### Phase 2: 
+- File to be created: `parser_by_spacy.py`
 - Use spaCy-based Named Entity Recognition (NER) models for extraction.
 - Build custom NER models if necessary.
 - Add spaCy Matcher logic if needed.
+- Output is json of key-value pairs, where Key is NER type and value is specific to the resume-person.
+- Also extract relationships values, it `Education` as key and value as say `CoEP`, its date range etc.
 
-### Phase 3: `build_kg.py`
-
+### Phase 3: 
+- File to be created: `build_kg.py`
 - Build a Knowledge Graph (KG) based on the extractions.
 - Nodes can represent entities like Person, Organizations, Skills, etc., and edges can represent relationships like "educated_in," "programs_in," etc.
-- Follow standard schemas like schema.org or DBpedia for resume extraction.
+- Central person-node can have person specific attributes, but other nodes like `Autodesk` or `CoEP` should not have, as other resume-person may also refer them. Resume-person specific attributes should be on edge from `Yogesh` to `CoEP` like date range, branch etc.
+- Nodes like `Python`, `NLP` will be common and can come from different company nodes, like `Icertis`, `Intuit` etc.
+- Schema design is critical as it decides which extractions can be NODES, EDGES and attributes on them.
+- Follow standard schema like schema.org or DBpedia for resume extraction.
 - Represent the KG initially in networkx format and later in Neo4j.
 - Build a Streamlit app to upload resumes and visualize the KG or use Neo4j.
 
-### Phase 4: `resume_chatbot.py`
-
+### Phase 4: 
+- File to be created: `resume_chatbot.py`
 - Use query languages like SPARQL or Cypher, depending on the KG's residence.
 - Leverage LLMs to convert natural language English queries into SPARQL or Cypher.
-- Build a Streamlit chatbot for querying the KG.
+- Build a Streamlit chatbot for querying the KG. See if you can visualize the built KG.
 - Deploy the chatbot on Streamlit-Shares for limited (e.g., 5 resumes) public access.
 
 ### Phase 5: Production
