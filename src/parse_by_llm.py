@@ -1,6 +1,7 @@
 import os
 from langchain.chains import LLMChain, SimpleSequentialChain  # import LangChain libraries
-from langchain.llms import OpenAI, HuggingFaceHub  # import OpenAI model
+# from langchain.llms import OpenAI, HuggingFaceHub  # import OpenAI model
+from langchain_community.llms import HuggingFaceHub
 from langchain.prompts import PromptTemplate  # import PromptTemplate
 from file_operations import read_data, DATA_FOLDER
 import json

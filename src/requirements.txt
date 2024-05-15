@@ -1,0 +1,5 @@
+PyPDF2
+docx2txt
+huggingface-hub
+langchain
+langchain_community
