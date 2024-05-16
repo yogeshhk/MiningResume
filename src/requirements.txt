@@ -6,3 +6,4 @@ langchain_community
 spacy
 scikit-learn
 matplotlib
+tika
