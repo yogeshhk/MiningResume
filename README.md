@@ -34,7 +34,7 @@ This repository contains programs to extract relevant fields from resumes and op
 ### Phase 2: 
 - File to be created: `parser_by_spacy.py`
 - Use spaCy-based Named Entity Recognition (NER) models for extraction.
-- Build custom NER models if necessary.
+- Build custom NER models if necessary. Data from `rijaraju repo` is at `data\rijaraju_repo_resume_ner_training_data.json`
 - Add spaCy Matcher logic if needed.
 - Output is json of key-value pairs, where Key is NER type and value is specific to the resume-person.
 - Also extract relationships values, it `Education` as key and value as say `CoEP`, its date range etc.

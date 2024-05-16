@@ -3,3 +3,6 @@ docx2txt
 huggingface-hub
 langchain
 langchain_community
+spacy
+scikit-learn
+matplotlib

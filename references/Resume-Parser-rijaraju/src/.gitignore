@@ -1,0 +1,6 @@
+*.txt
+*.docx
+*.tmp
+_pycache_/
+.idea/
+nlp_model/

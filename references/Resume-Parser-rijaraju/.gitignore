@@ -1,0 +1,4 @@
+*.txt
+*.docx
+*.tmp
+_pycache_
