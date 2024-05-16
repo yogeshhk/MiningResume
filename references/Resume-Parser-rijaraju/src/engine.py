@@ -23,4 +23,3 @@ model = utils.check_existing_model("nlp_model")
 model = train_model.build_spacy_model(train, model)
 
 predict_model.predict("../output")
-
