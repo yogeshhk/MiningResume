@@ -2,6 +2,8 @@
 
 This repository contains programs to extract relevant fields from resumes and optionally build a knowledge graph (KG) for effective querying using a chatbot.
 
+Detailed specifications are [here](./src/README.md) and [here](https://medium.com/technology-hits/specs-for-chatbot-on-resumes-91d3f3745e62)
+
 ## Features
 
 ### Phase 0: Rule-based Extraction
