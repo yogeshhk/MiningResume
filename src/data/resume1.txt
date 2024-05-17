@@ -1,6 +1,6 @@
 MyFirstName MyLastName 
 
-Address: HouseNumber, ColonyName, AreaName, Village, City, Country 
+Address: 1111, ColonyName, AreaName, Village, City, Country 
 Mobile: +91 999 999 9999 
 Email: myfirstname@example.com 
 
