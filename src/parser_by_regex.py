@@ -25,6 +25,12 @@ def univalue_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
 def section_value_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
     retval = OrderedDict()
     single_section_lines = parsed_items_dict["Sections"].get(section)
+
+    #fixing as it return an empty dictionary when there is missing section
+    if single_section_lines is None:
+        print(f"Warning: Section '{section}' not found in parsed items.")
+        return retval 
+    
     for line in single_section_lines:
         for node_tag, pattern_string in sub_terms_dict.items():
             pattern_list = re.split(r",|:", pattern_string[0])
