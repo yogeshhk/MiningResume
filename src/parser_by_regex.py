@@ -4,7 +4,8 @@ import xml.etree.cElementTree as ET
 from collections import OrderedDict
 
 from file_operations import read_data, DATA_FOLDER, CONFIG_FILE
-
+from PyPDF2 import PdfReader
+import os
 
 def univalue_extractor(resume_text, section, sub_terms_dict, parsed_items_dict):
     retval = OrderedDict()
@@ -124,6 +125,28 @@ def parse_document(resume_text, resume_config):
     # key of section extractors is not to be printed
     del parsed_items_dict["Sections"]
     return parsed_items_dict
+
+#fix missing function that has been called in the main.py for reading the documentation.
+def read_document(file_path):
+    """
+    Reads a document based on its file type (txt or pdf) and returns the text content.
+    :param file_path: Path to the file
+    :return: Text content of the file
+    """
+    file_extension = os.path.splitext(file_path)[1].lower()
+
+    if file_extension == '.txt':
+        with open(file_path, 'r', encoding='utf-8') as file:
+            document_text = file.read()
+    elif file_extension == '.pdf':
+        document_text = ""
+        reader = PdfReader(file_path)
+        for page in reader.pages:
+            document_text += page.extract_text()
+    else:
+        raise ValueError(f"Unsupported file type: {file_extension}")
+
+    return document_text
 
 
 if __name__ == "__main__":
