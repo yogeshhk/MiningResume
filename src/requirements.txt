@@ -7,3 +7,4 @@ spacy
 scikit-learn
 matplotlib
 tika
+markitdown
