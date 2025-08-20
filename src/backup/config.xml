@@ -1,0 +1,40 @@
+<Config-Specifications>
+    <Term name="Sections">
+        <Method name="section_extractor">
+            <SummarySection>Summary, Objective, Goal, Aim</SummarySection>
+            <SkillSection>Skill, Skills</SkillSection>
+            <EmploymentSection>Employment, History, Work, Experience</EmploymentSection>
+            <EducationSection>Education</EducationSection>
+            <HonorsSection>Honors, Rewards, Accomplishments</HonorsSection>
+        </Method>
+    </Term>
+    <Term name="Metadata">
+        <Method name="univalue_extractor" section="">
+            <Name>(^(Name:\s*)?(.+))</Name>
+            <Email>((\w+[.|\w])*@(\w+[.])*\w+)</Email>
+            <Email>([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4})</Email>
+            <Email>(([a-z0-9!#$%'*+\/=?^_`{|.}~-]+@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?))</Email>
+            <Phone>((\+\d+\s*)?(\(?\d{3}\)?\D+\d{3}\D+\d{4}))</Phone>
+            <Phone>((?:\(?\+91\)?)?\d{9})</Phone>
+            <Phone>(\(?(\+)?(\d{1,3})?\)?[\s-]{0,1}?(\d{"+str(i)+"})[\s\.-]{0,1}(\d{"+str(j)+"})[\s\.-]{0,1}(\d{"+str(n-i-j)+"}))</Phone>
+            <Address>Address: (.+)</Address>
+        </Method>
+    </Term>
+    <Term name="Education">
+        <Method name="section_value_extractor" section="EducationSection">
+            <Secondary>10th,X,Matric,SSC</Secondary>
+            <HigherSecondary>12th,XII,HSC</HigherSecondary>
+            <Diploma>CDAC, PGDBM</Diploma>
+            <Bachelors>BE,B.E.,BTech,B.Tech,BS,Mechanical,Instrumentation,Civil</Bachelors>
+            <Masters>ME,MTech,M.E.,M.Tech,MS</Masters>
+            <PhD>Doctorate,PhD,Ph.D.,Ph.D</PhD>
+        </Method>
+    </Term>
+    <Term name="Skills">
+        <Method name="section_value_extractor" section="SkillSection">
+            <Certifications>Certified Scrum Master,ISTQB</Certifications>
+            <QA>Selenium,Selenium Grid,Cucumber,Jenkins,Robot,AutoIT,SilkTest,JMeter</QA>
+            <Programming>Python,Perl,Java</Programming>
+        </Method>
+    </Term>
+</Config-Specifications>
