@@ -33,8 +33,8 @@ class LLMResumeParser:
             "text2text-generation",   # for seq2seq models like flan-t5
             model=model_name,
             tokenizer=model_name,
-            max_new_tokens=512,
-            use_auth_token=None   # 🚀 forces anonymous access
+            max_new_tokens=2048,
+            token=False  # ✅ Correct and explicit way to force no token
         )
         self.llm = HuggingFacePipeline(pipeline=pipe)        
         self.attributes_list = [
