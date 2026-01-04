@@ -254,11 +254,11 @@ if __name__ == "__main__":
 
     # 2. Set up paths and check for the resume file
     # Create a 'data' directory if it doesn't exist
-    if not os.path.exists("data"):
-        os.makedirs("data")
+    if not os.path.exists("../src/data"):
+        os.makedirs("../src/data")
         print("Created 'data' directory.")
 
-    resume_file_path = os.path.join("data", "YogeshKulkarniLinkedInProfile.pdf")
+    resume_file_path = os.path.join("../src/data", "YogeshKulkarniLinkedInProfile.pdf")
 
     if not os.path.exists(resume_file_path):
         print(f"\nERROR: Resume file not found at '{resume_file_path}'")

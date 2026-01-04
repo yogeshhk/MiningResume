@@ -1,0 +1,32 @@
+[project]
+name = "mining-resume-llm"
+version = "2.0.0"
+description = "Production-grade LLM Resume Parser with SOLID principles, modularity, and observability."
+authors = ["Yogesh H Kulkarni <yogeshkulkarni@gmail.com>"]
+license = "MIT"
+readme = "llm_parser/README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "PyPDF2>=3.0.0",
+    "docx2txt>=0.8",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "langchain>=0.1.0",
+    "langchain-community>=0.0.10",
+    "langchain-huggingface>=0.0.1",
+    "transformers>=4.35.0",
+    "torch>=2.0.0",
+    "sentencepiece>=0.1.99",
+    "huggingface-hub>=0.19.0",
+    "pyyaml>=6.0",
+    "cachetools>=5.0.0",
+    "pytest>=7.4.0",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0"
+]
+
+# Optional dependencies
+# redis = ">=4.0.0"  # For Redis cache backend
+# pdfplumber = ">=0.9.0"  # For better PDF extraction
