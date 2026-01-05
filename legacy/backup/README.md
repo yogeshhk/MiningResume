@@ -157,7 +157,7 @@ Possible schema is as below:
 	]
 ```
 
-![Resume Knowledge Graph](./ResumeKnowledgeGraphChatbot.png)
+![Resume Knowledge Graph](ResumeKnowledgeGraphChatbot.png)
 
 Please note, node specific attributes are inside node and similarly for edges. e.g. the first education node "CDAC" has only location, it does not have date-range or result, as they are SELF specific. These will be as attributes from SELF to EDUCATION node, as shown in edge_id 1.
 
