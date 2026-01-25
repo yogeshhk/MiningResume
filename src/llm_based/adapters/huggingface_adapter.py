@@ -5,7 +5,6 @@ Implements the ILLMProvider interface for HuggingFace models.
 """
 
 import os
-from typing import Optional
 from transformers import pipeline
 from langchain_community.llms import HuggingFacePipeline
 
@@ -21,101 +20,104 @@ logger = get_logger(__name__)
 class HuggingFaceAdapter(ILLMProvider):
     """HuggingFace implementation of ILLMProvider."""
 
-    def __init__(
-        self,
-        model_name: Optional[str] = None,
-        use_local: bool = True,
-        api_token: Optional[str] = None,
-    ):
+    def __init__(self):
         """
         Initialize HuggingFace adapter.
-
-        Args:
-            model_name: Model name/identifier
-            use_local: Whether to use local model instead of API
-            api_token: HuggingFace API token (for API usage)
         """
-        self.model_name = model_name or settings.llm_model_name
-        self.use_local = use_local
-        self.api_token = api_token or settings.get_hf_token()
         self.llm = None
-        self._initialized = False
-
-        logger.info(
-            "Initializing HuggingFace adapter",
-            model=self.model_name,
-            use_local=self.use_local
-        )
-
-    def _initialize(self) -> None:
-        """Lazy initialization of the model."""
-        if self._initialized:
-            return
-
         try:
-            if self.use_local:
-                self._initialize_local_model()
+            if settings.use_local_llm:
+                self.llm = self._initialize_local_model()
             else:
-                self._initialize_api_model()
+                self.llm = self._initialize_api_model()
 
-            self._initialized = True
             logger.info(f"HuggingFace adapter initialized successfully")
 
         except Exception as e:
             logger.error(f"Failed to initialize HuggingFace adapter: {e}")
             raise LLMServiceError(
                 f"Failed to initialize HuggingFace model: {e}",
-                details={"model": self.model_name, "use_local": self.use_local}
+                details={"model": settings.llm_model_name, "use_local": settings.use_local_llm}
             ) from e
 
-    def _initialize_local_model(self) -> None:
+    def _initialize_local_model(self):
         """Initialize local HuggingFace model."""
-        logger.info(f"Loading local model: {self.model_name}")
+        logger.info(f"Loading local model: {settings.llm_model_name}")
 
         try:
-            # Create pipeline for text2text generation
+            # Enforce strictly-local behavior: prevent any network calls
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+
+            # Create pipeline for text2text generation using only local files
             pipe = pipeline(
                 "text2text-generation",
-                model=self.model_name,
-                tokenizer=self.model_name,
+                model=settings.llm_model_name,
+                tokenizer=settings.llm_model_name,
                 max_new_tokens=settings.llm_max_tokens,
                 token=False,  # Don't require token for local models
             )
 
-            # Wrap in LangChain
-            self.llm = HuggingFacePipeline(pipeline=pipe)
+            # Attempt to capture and log local paths of loaded artifacts
+            model_path = getattr(getattr(pipe, "model", None), "name_or_path", None)
+            tokenizer_path = getattr(getattr(pipe, "tokenizer", None), "name_or_path", None)
+            paths = []
+            if isinstance(model_path, str) and os.path.exists(model_path):
+                paths.append(os.path.abspath(model_path))
+            if isinstance(tokenizer_path, str) and os.path.exists(tokenizer_path):
+                paths.append(os.path.abspath(tokenizer_path))
+            if paths:
+                logger.info(
+                    "Using local HuggingFace artifacts",
+                    model_paths=paths,
+                )
 
-            logger.info(f"Local model loaded successfully: {self.model_name}")
+            # Wrap in LangChain
+            return HuggingFacePipeline(pipeline=pipe)
 
         except Exception as e:
-            logger.error(f"Failed to load local model: {e}")
+            # Provide a clear message if local files are missing and prevent silent hub downloads
+            logger.error(
+                "Failed to load local model strictly offline",
+                error=str(e),
+                model=settings.llm_model_name,
+                hint=(
+                    "Model/tokenizer must be available locally. "
+                    "If using a Hub ID, pre-download the files to cache or specify a local directory path. "
+                    "You can prefetch via a connected environment and then run offline, or set model_name to a folder containing "
+                    "config.json, tokenizer files, and model weights."
+                ),
+            )
             raise
 
-    def _initialize_api_model(self) -> None:
+    def _initialize_api_model(self):
         """Initialize HuggingFace API-based model."""
         from langchain_huggingface import HuggingFaceEndpoint
 
-        logger.info(f"Connecting to HuggingFace API: {self.model_name}")
+        logger.info(f"Connecting to HuggingFace API: {settings.llm_model_name}")
 
-        if not self.api_token:
+        # Ensure offline env flags do not interfere with API usage
+        for var in ("TRANSFORMERS_OFFLINE", "HF_HUB_OFFLINE"):
+            if os.environ.get(var):
+                logger.debug("Unsetting offline environment flag", flag=var)
+                os.environ.pop(var, None)
+
+        if not settings.hf_api_token:
             raise LLMServiceError(
                 "HuggingFace API token required but not found",
                 details={
-                    "env_vars_checked": ["HUGGINGFACEHUB_API_TOKEN", "HF_API_TOKEN"]
+                    "env_vars_checked": ["HUGGING_FACE_HUB_API_TOKEN", "HF_API_TOKEN"]
                 }
             )
 
         try:
-            self.llm = HuggingFaceEndpoint(
-                repo_id=self.model_name,
+            return HuggingFaceEndpoint(
+                repo_id=settings.llm_model_name,
                 temperature=settings.llm_temperature,
-                huggingfacehub_api_token=self.api_token,
+                huggingfacehub_api_token=settings.hf_api_token,
                 max_new_tokens=settings.llm_max_tokens,
                 timeout=settings.llm_timeout_seconds,
             )
-
-            logger.info(f"Connected to HuggingFace API successfully")
-
         except Exception as e:
             logger.error(f"Failed to connect to HuggingFace API: {e}")
             raise
@@ -133,10 +135,6 @@ class HuggingFaceAdapter(ILLMProvider):
         Raises:
             LLMServiceError: If LLM call fails
         """
-        # Initialize model if needed
-        if not self._initialized:
-            self._initialize()
-
         try:
             # Build full prompt
             full_prompt = request.prompt.format(
@@ -167,14 +165,12 @@ class HuggingFaceAdapter(ILLMProvider):
                 return LLMResponse(
                     content=content.strip(),
                     attribute=request.attribute,
-                    model_name=self.model_name,
-                    cached=False,
                 )
 
             except TimeoutError as e:
                 raise LLMTimeoutError(
                     f"LLM request timed out: {e}",
-                    details={"attribute": request.attribute, "model": self.model_name}
+                    details={"attribute": request.attribute, "model": settings.llm_model_name}
                 ) from e
 
         except LLMTimeoutError:
@@ -185,7 +181,7 @@ class HuggingFaceAdapter(ILLMProvider):
                 f"Failed to generate response: {e}",
                 details={
                     "attribute": request.attribute,
-                    "model": self.model_name,
+                    "model": settings.llm_model_name,
                     "error_type": type(e).__name__,
                 }
             ) from e
@@ -198,19 +194,14 @@ class HuggingFaceAdapter(ILLMProvider):
             True if service is healthy
         """
         try:
-            # Try to initialize if not already done
-            if not self._initialized:
-                self._initialize()
-
             # Try a simple generation
             test_request = LLMRequest(
                 prompt="Say 'OK'",
                 context="",
-                attribute="health_check",
-                max_tokens=10,
+                attribute="health_check"
             )
 
-            response = self.generate(test_request)
+            self.generate(test_request)
 
             logger.info("Health check passed")
             return True
@@ -219,25 +210,3 @@ class HuggingFaceAdapter(ILLMProvider):
             logger.error(f"Health check failed: {e}")
             return False
 
-    def get_provider_name(self) -> str:
-        """
-        Get the name of the LLM provider.
-
-        Returns:
-            Provider name
-        """
-        return "huggingface"
-
-    def get_model_info(self) -> dict:
-        """
-        Get information about the loaded model.
-
-        Returns:
-            Dictionary with model information
-        """
-        return {
-            "provider": self.get_provider_name(),
-            "model_name": self.model_name,
-            "use_local": self.use_local,
-            "initialized": self._initialized,
-        }

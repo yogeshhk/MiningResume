@@ -3,127 +3,72 @@ Configuration settings for the LLM Resume Parser.
 
 Uses pydantic-settings for environment-based configuration.
 """
-
+import json
 import os
 from pathlib import Path
 from typing import Optional, List
 from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
 
+load_dotenv(override=True)
 
-class Settings(BaseSettings):
+class Settings:
     """Application settings loaded from environment variables."""
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
-    )
-
     # Application Settings
-    app_name: str = Field(default="LLM Resume Parser", description="Application name")
-    app_version: str = Field(default="2.0.0", description="Application version")
-    environment: str = Field(default="development", description="Environment (development/production)")
+    app_name: str = os.getenv("APP_NAME", "LLM Resume Parser")
+    app_version: str = os.getenv("APP_VERSION", "Application version")
+    environment: str = os.getenv("ENVIRONMENT", "Environment (development/production)")
 
     # LLM Provider Settings
-    llm_provider: str = Field(default="huggingface", description="LLM provider name")
-    llm_model_name: str = Field(
-        default="google/flan-t5-large",
-        description="Default LLM model name"
-    )
-    llm_temperature: float = Field(default=1e-10, ge=0.0, le=2.0, description="LLM temperature")
-    llm_max_tokens: int = Field(default=2048, gt=0, description="Max tokens to generate")
-    llm_timeout_seconds: int = Field(default=120, gt=0, description="LLM request timeout")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "huggingface")
+    llm_model_name: str = os.getenv("LLM_MODEL_NAME", "google/flan-t5-large")
+    llm_temperature: float = float(os.getenv("LLM_TEMPERATURE", 0.7))
+    llm_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", 2048))
+    llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", 120))
+    use_local_llm: bool = bool(os.getenv("USE_LOCAL_LLM", True))
 
     # HuggingFace Settings
-    huggingface_api_token: Optional[str] = Field(
-        default=None,
-        alias="HUGGINGFACEHUB_API_TOKEN",
-        description="HuggingFace API token"
-    )
-    hf_api_token: Optional[str] = Field(
-        default=None,
-        alias="HF_API_TOKEN",
-        description="Alternative HuggingFace API token"
-    )
-    huggingface_use_local: bool = Field(
-        default=True,
-        description="Use local model instead of API"
-    )
+    hf_api_token: Optional[str] = os.getenv("HF_API_TOKEN")
+    open_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
 
-    # OpenAI Settings (placeholder for future)
-    openai_api_key: Optional[str] = Field(
-        default=None,
-        alias="OPENAI_API_KEY",
-        description="OpenAI API key"
-    )
+    ollama_api_url: Optional[str] = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+    ollama_api_key: Optional[str] = os.getenv("OLLAMA_API_KEY")
 
     # Extraction Settings
-    extraction_attributes: List[str] = Field(
-        default=[
-            "Name", "Email", "Phone Number", "Address", "Objective",
-            "Skills", "Employment History", "Education History", "Accomplishments"
-        ],
-        description="Attributes to extract from resumes"
-    )
-
-    # Retry Settings
-    retry_max_attempts: int = Field(default=3, ge=0, description="Maximum retry attempts")
-    retry_backoff_factor: float = Field(default=2.0, gt=0, description="Retry backoff factor")
-    retry_initial_wait_seconds: float = Field(default=1.0, gt=0, description="Initial retry wait")
+    extraction_attributes: List[str] = json.loads(os.getenv("EXTRACTION_ATTRIBUTES", '["Name", "Email", "Phone Number", "Address", "Objective", "Skills", "Employment History", "Education History", "Accomplishments"]'))
+    extraction_attributes = [attr.lower().strip() for attr in extraction_attributes]
 
     # Cache Settings
-    cache_enabled: bool = Field(default=True, description="Enable caching")
-    cache_ttl_seconds: int = Field(default=3600, gt=0, description="Cache TTL")
-    cache_backend: str = Field(default="memory", description="Cache backend (memory/redis)")
-    redis_url: Optional[str] = Field(default=None, description="Redis URL for caching")
+    cache_enabled: bool = bool(os.getenv("CACHE_ENABLED", True))
+    cache_ttl_seconds: int = int(os.getenv("CACHE_TTL_SECONDS", 3600))
+    cache_backend: str = os.getenv("CACHE_BACKEND", "memory")
+
+    # Retry Settings
+    retry_max_attempts: int = int(os.getenv("RETRY_MAX_ATTEMPTS", 3))
+    retry_backoff_factor: float = float(os.getenv("RETRY_BACKOFF_FACTOR", 2.0))
+    retry_initial_wait_seconds: float = float(os.getenv("RETRY_INITIAL_WAIT_SECONDS", 1.0))
+
 
     # File Processing Settings
-    max_file_size_mb: int = Field(default=10, gt=0, description="Max file size in MB")
-    supported_formats: List[str] = Field(
-        default=["pdf", "docx", "txt"],
-        description="Supported file formats"
-    )
+    max_file_size_mb: int = int(os.getenv("MAX_FILE_SIZE_MB", 10))
+    supported_formats: List[str] = json.loads(os.getenv("SUPPORTED_FORMATS", '["pdf", "docx", "txt"]'))
+    supported_formats = [fmt.lower().strip() for fmt in supported_formats]
+    fail_fast_for_batch: bool = bool(os.getenv("FAIL_FAST_FOR_BATCH", True))
 
     # Logging Settings
-    log_level: str = Field(default="INFO", description="Logging level")
-    log_format: str = Field(
-        default="json",
-        description="Log format (json/text)"
-    )
-    log_file_path: Optional[Path] = Field(
-        default=None,
-        description="Path to log file"
-    )
-    log_rotation_size_mb: int = Field(
-        default=10,
-        gt=0,
-        description="Log file rotation size"
-    )
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    log_format: str = os.getenv("LOG_FORMAT", "json")
+    log_rotation_size_mb: int = int(os.getenv("LOG_ROTATION_SIZE_MB", 10))
 
     # Paths
-    data_folder: Path = Field(
-        default_factory=lambda: Path(__file__).parent.parent.parent / "data",
-        description="Default data folder path"
-    )
-    logs_folder: Path = Field(
-        default_factory=lambda: Path(__file__).parent.parent.parent / "logs",
-        description="Logs folder path"
-    )
+    data_folder: Path = Path(__file__).parent.parent.parent / "data"
+    logs_folder: Path = Path(__file__).parent.parent.parent / "logs"
+    log_file_path: str = Path(logs_folder) / "app.log"
     prompts_file: Path = Field(
         default_factory=lambda: Path(__file__).parent / "prompts.yaml",
         description="Path to prompts configuration file"
     )
-
-    def get_hf_token(self) -> Optional[str]:
-        """Get HuggingFace token from available sources."""
-        return (
-            self.huggingface_api_token
-            or self.hf_api_token
-            or os.environ.get("HUGGINGFACEHUB_API_TOKEN")
-            or os.environ.get("HF_API_TOKEN")
-        )
 
     def ensure_directories(self) -> None:
         """Ensure necessary directories exist."""

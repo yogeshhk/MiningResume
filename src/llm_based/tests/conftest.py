@@ -8,12 +8,10 @@ from unittest.mock import Mock
 from src.llm_based.core.models import (
     ResumeDocument,
     ExtractedResume,
-    ParserConfig,
     LLMRequest,
     LLMResponse,
     FileFormat,
 )
-
 
 @pytest.fixture
 def sample_resume_text():
@@ -58,24 +56,14 @@ def sample_extracted_resume():
     """Sample extracted resume data."""
     return ExtractedResume(
         filename="test_resume.pdf",
-        name="John Doe",
-        email="john.doe@example.com",
-        phone_number="+1 (555) 123-4567",
-        skills="Python, JavaScript, SQL",
-        employment_history="Senior Software Engineer at Tech Corp",
-        education_history="BS Computer Science",
-    )
-
-
-@pytest.fixture
-def parser_config():
-    """Default parser configuration for testing."""
-    return ParserConfig(
-        model_name="test-model",
-        temperature=0.1,
-        max_tokens=100,
-        cache_enabled=False,
-        max_retries=1,
+        extracted_attributes={
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "phone_number": "+1 (555) 123-4567",
+            "skills": "Python, JavaScript, SQL",
+            "employment_history": "Senior Software Engineer at Tech Corp",
+            "education_history": "BS Computer Science",
+        }
     )
 
 
@@ -88,7 +76,6 @@ def mock_llm_provider():
     provider.generate.return_value = LLMResponse(
         content="Test response",
         attribute="test",
-        model_name="mock-model",
     )
     return provider
 
@@ -110,6 +97,5 @@ def sample_llm_response():
         content="John Doe",
         attribute="Name",
         tokens_used=50,
-        model_name="test-model",
     )
 

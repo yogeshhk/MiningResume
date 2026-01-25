@@ -17,7 +17,7 @@ class TestInMemoryCacheService:
 
     def test_set_and_get(self):
         """Test setting and getting values."""
-        cache = InMemoryCacheService(default_ttl_seconds=60)
+        cache = InMemoryCacheService()
 
         cache.set("key1", "value1")
         assert cache.get("key1") == "value1"
@@ -30,7 +30,7 @@ class TestInMemoryCacheService:
 
     def test_ttl_expiration(self):
         """Test TTL expiration."""
-        cache = InMemoryCacheService(default_ttl_seconds=1)
+        cache = InMemoryCacheService()
 
         cache.set("key1", "value1")
         assert cache.get("key1") == "value1"
@@ -41,7 +41,7 @@ class TestInMemoryCacheService:
 
     def test_custom_ttl(self):
         """Test custom TTL per key."""
-        cache = InMemoryCacheService(default_ttl_seconds=60)
+        cache = InMemoryCacheService()
 
         cache.set("key1", "value1", ttl_seconds=1)
         assert cache.get("key1") == "value1"
@@ -73,7 +73,7 @@ class TestInMemoryCacheService:
 
     def test_cleanup_expired(self):
         """Test cleanup of expired entries."""
-        cache = InMemoryCacheService(default_ttl_seconds=1)
+        cache = InMemoryCacheService()
 
         cache.set("key1", "value1")
         cache.set("key2", "value2")
@@ -126,7 +126,7 @@ class TestCreateCacheService:
 
     def test_create_memory_cache(self):
         """Test creating in-memory cache."""
-        cache = create_cache_service("memory", 60)
+        cache = create_cache_service()
 
         assert isinstance(cache, InMemoryCacheService)
 
@@ -135,5 +135,5 @@ class TestCreateCacheService:
         from src.llm_based.core.exceptions import CacheError
 
         with pytest.raises(CacheError):
-            create_cache_service("unsupported", 60)
+            create_cache_service()
 

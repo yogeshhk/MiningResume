@@ -12,7 +12,7 @@ system_prompt: |
   - Be precise and factual
 
 extraction:
-  # Template for extracting individual attributes
+  # Template for extracting individual extracted_attributes
   user_prompt_template: |
     Extract {attribute} from the following resume text.
     
@@ -92,7 +92,7 @@ validation:
     
     Is this valid? Answer with only "yes" or "no".
 
-# Default attributes to extract (can be overridden in settings)
+# Default extracted_attributes to extract (can be overridden in settings)
 default_attributes:
   - Name
   - Email

@@ -3,8 +3,8 @@ Example script demonstrating usage of the LLM Resume Parser.
 
 This shows how to use the parser programmatically.
 """
+from pathlib import Path
 
-from src.llm_based.core.models import ParserConfig
 from src.llm_based.services.document_reader import BaseDocumentReader
 from src.llm_based.services.text_extractor import TextExtractorService
 from src.llm_based.services.llm_service import LLMService
@@ -12,21 +12,12 @@ from src.llm_based.services.parser_service import ParserService
 from src.llm_based.services.cache_service import create_cache_service
 from src.llm_based.adapters.file_adapters import create_text_extractor_for_format
 from src.llm_based.adapters.huggingface_adapter import HuggingFaceAdapter
+from src.llm_based.adapters.ollama_adapter import OllamaAdapter
 from src.llm_based.core.models import FileFormat
 from src.llm_based.config.settings import settings
 
 
 def setup_parser():
-    """Set up the parser with all dependencies."""
-
-    # Create configuration
-    config = ParserConfig(
-        model_name="google/flan-t5-large",
-        temperature=1e-10,
-        max_tokens=2048,
-        cache_enabled=True,
-    )
-
     # Create document reader
     document_reader = BaseDocumentReader()
 
@@ -39,21 +30,19 @@ def setup_parser():
         text_extractor.register_extractor(file_format, extractor)
 
     # Create cache service
-    cache_service = create_cache_service(
-        backend="memory",
-        default_ttl_seconds=3600
-    )
+    cache_service = create_cache_service()
 
     # Create LLM provider
-    llm_provider = HuggingFaceAdapter(
-        model_name=config.model_name,
-        use_local=True,
-    )
+    if settings.llm_provider.lower() == "huggingface":
+        llm_provider = HuggingFaceAdapter()
+    elif settings.llm_provider.lower() == "ollama":
+        llm_provider = OllamaAdapter()
+    else:
+        raise ValueError(f"Unsupported LLM provider: {settings.llm_provider}")
 
     # Create LLM service
     llm_service = LLMService(
         provider=llm_provider,
-        config=config,
         cache_service=cache_service,
     )
 
@@ -62,7 +51,6 @@ def setup_parser():
         document_reader=document_reader,
         text_extractor=text_extractor,
         llm_service=llm_service,
-        config=config,
     )
 
     return parser_service
@@ -74,7 +62,7 @@ def main():
     print("=== LLM Resume Parser Example ===\n")
 
     # Get sample resume path
-    data_folder = settings.data_folder
+    data_folder = Path(__file__).parent.parent.parent / "data"
     sample_resume = data_folder / "YogeshKulkarniLinkedInProfile.pdf"
 
     if not sample_resume.exists():

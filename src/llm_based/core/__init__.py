@@ -3,7 +3,6 @@
 from src.llm_based.core.models import (
     ResumeDocument,
     ExtractedResume,
-    ParserConfig,
     ParserResult,
     LLMRequest,
     LLMResponse,
@@ -35,7 +34,6 @@ __all__ = [
     # Models
     "ResumeDocument",
     "ExtractedResume",
-    "ParserConfig",
     "ParserResult",
     "LLMRequest",
     "LLMResponse",

@@ -13,7 +13,6 @@ from src.llm_based.core.models import (
     ExtractedResume,
     LLMRequest,
     LLMResponse,
-    ParserConfig,
     ParserResult,
 )
 
@@ -102,16 +101,6 @@ class ILLMProvider(ABC):
         """
         pass
 
-    @abstractmethod
-    def get_provider_name(self) -> str:
-        """
-        Get the name of the LLM provider.
-
-        Returns:
-            Provider name (e.g., "huggingface", "openai")
-        """
-        pass
-
 
 class ICacheService(ABC):
     """Interface for caching service."""
@@ -161,13 +150,12 @@ class IParserService(ABC):
     """Interface for the main parser orchestration service."""
 
     @abstractmethod
-    def parse_single(self, file_path: Path, config: Optional[ParserConfig] = None) -> ParserResult:
+    def parse_single(self, file_path: Path) -> ParserResult:
         """
         Parse a single resume file.
 
         Args:
             file_path: Path to the resume file
-            config: Optional parser configuration
 
         Returns:
             ParserResult with extracted data or error information
@@ -175,15 +163,12 @@ class IParserService(ABC):
         pass
 
     @abstractmethod
-    def parse_batch(
-        self, file_paths: List[Path], config: Optional[ParserConfig] = None
-    ) -> List[ParserResult]:
+    def parse_batch(self, file_paths: List[Path]) -> List[ParserResult]:
         """
         Parse multiple resume files.
 
         Args:
             file_paths: List of paths to resume files
-            config: Optional parser configuration
 
         Returns:
             List of ParserResult for each file

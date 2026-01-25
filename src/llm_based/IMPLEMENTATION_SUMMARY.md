@@ -4,9 +4,10 @@
 
 ### Core Infrastructure
 - ✅ `core/models.py` - Pydantic data models with validation
-  - ResumeDocument, ExtractedResume, ParserConfig
+  - ResumeDocument, ExtractedResume
   - LLMRequest, LLMResponse, ParserResult
   - FileFormat enum
+  - Note: ExtractedResume attributes are populated dynamically from normalized field names based on `settings.extraction_attributes`.
 
 - ✅ `core/interfaces.py` - Abstract base classes (SOLID - Dependency Inversion)
   - IDocumentReader, ITextExtractor, ILLMProvider
@@ -14,25 +15,26 @@
 
 - ✅ `core/exceptions.py` - Custom exception hierarchy
   - ParserException (base), DocumentReadError, TextExtractionError
-  - LLMServiceError, ValidationError, CacheError
+  - LLMServiceError, ValidationError, CacheError, UnsupportedFormatError
 
-- ✅ `config/settings.py` - Pydantic-based configuration management
-  - Environment variable loading
-  - Typed settings with validation
-  - Default values
+- ✅ `config/settings.py` - Environment-driven configuration
+  - Environment variable loading with typed defaults
+  - Directory setup (logs, data) ensured on import
+  - `prompts_file` points to `config/prompts.yaml`
 
 - ✅ `config/prompts.yaml` - Externalized prompt templates
   - System prompts
   - Attribute-specific prompts
   - Easy customization
+  - Fallback: If missing, `services/llm_service.py` uses built-in default prompts
 
 ## ✅ Phase 2: Service Layer - COMPLETE
 
 ### Business Logic Services
 - ✅ `services/cache_service.py`
-  - InMemoryCacheService with TTL
   - CacheKeyGenerator for consistent hashing
-  - Factory function for different backends
+  - TTL usage driven by `settings.cache_ttl_seconds`
+  - (Backend specifics depend on the provided cache service; LLMService supports optional cache injection)
 
 - ✅ `services/document_reader.py`
   - BaseDocumentReader with validation
@@ -46,13 +48,13 @@
 
 - ✅ `services/llm_service.py`
   - LLMService with caching and retry
-  - Prompt management from YAML
-  - Token tracking and metrics
+  - Prompt management from YAML with safe fallback to defaults
+  - Token tracking (`TokenCounter`) and latency metrics
 
 - ✅ `services/parser_service.py`
   - Main orchestration service
   - Single and batch parsing
-  - Comprehensive error handling
+  - Comprehensive error handling and validation
 
 ## ✅ Phase 3: Adapters - COMPLETE
 
@@ -64,63 +66,52 @@
   - Factory function
 
 - ✅ `adapters/huggingface_adapter.py`
-  - Full ILLMProvider implementation
+  - ILLMProvider implementation
   - Local and API model support
-  - Lazy initialization
-  - Health checks
+  - Eager initialization in constructor (based on `settings.use_local_llm`)
+  - Health checks via a simple prompt
+  - Note: Local mode uses the `text2text-generation` pipeline (models like T5/FLAN-T5)
 
 - ✅ `adapters/openai_adapter.py`
   - Placeholder for future implementation
   - Interface documented
-  - TODO with implementation outline
+  - TODO with implementation outline (not wired into LLMService yet)
 
-## ✅ Phase 4: Utilities & CLI - COMPLETE
+## ✅ Phase 4: Utilities COMPLETE
 
 ### Utilities
 - ✅ `utils/logger.py`
   - StructuredLogger with JSON output
   - Multiple handlers (console, file)
   - Contextual logging
+  - Log level/format driven by environment (`LOG_LEVEL`, `LOG_FORMAT`)
 
 - ✅ `utils/retry.py`
   - retry_with_backoff decorator
   - Exponential backoff strategy
-  - Async support
 
 - ✅ `utils/validators.py`
   - FileValidator, ResumeDataValidator, TextValidator
-  - Comprehensive validation rules
-  - Email/phone pattern matching
+  - Validation rules for files, text, and extracted data
 
 - ✅ `utils/metrics.py`
   - MetricsCollector for aggregation
-  - OperationMetrics tracking
+  - Performance timers (`PerformanceTimer`)
   - TokenCounter for usage
-  - Performance timers
-
-### CLI
-- ✅ `cli.py`
-  - Full command-line interface
-  - Single file and batch parsing
-  - Configurable options
-  - Pretty output
 
 ## ✅ Phase 5: Testing - PARTIAL (Foundation Complete)
 
 ### Test Infrastructure
 - ✅ `tests/conftest.py` - Pytest fixtures and configuration
-- ✅ `tests/unit/test_validators.py` - Validator tests
-- ✅ `tests/unit/test_cache_service.py` - Cache tests
 - ✅ `pytest.ini` - Pytest configuration
-- 🔲 Additional test files (can be added as needed)
+- 🔲 Additional unit tests (validators, cache, services) can be added as needed
 
 ## ✅ Phase 6: Documentation & Configuration - COMPLETE
 
 ### Configuration Files
-- ✅ `.env.example` - Environment template
-- ✅ `requirements_new.txt` - Updated dependencies
 - ✅ `pytest.ini` - Test configuration
-- ✅ `src.llm_based/README.md` - Comprehensive documentation
+- ✅ `src.llm_based/README.md` - Documentation
+- 🔲 Environment template and dependency manifests (if present in repository root)
 
 ### Example Code
 - ✅ `example_usage.py` - Complete usage example
@@ -192,17 +183,16 @@
 ### ✅ Performance
 - ✅ Response caching
 - ✅ Batch processing
-- ✅ Token optimization
-- ✅ Lazy initialization
+- ✅ Token usage tracking
 
 ## 📈 Code Quality Metrics
 
 - **Modularity**: 9/10 - Highly modular with clear boundaries
 - **Testability**: 9/10 - Interface-based design, easy to mock
 - **Maintainability**: 9/10 - SOLID principles, clear structure
-- **Scalability**: 8/10 - Ready for concurrent processing (future async)
-- **Documentation**: 9/10 - Comprehensive README, docstrings
-- **Type Safety**: 10/10 - Full Pydantic validation, type hints
+- **Scalability**: 8/10 - Architecture supports batch operations; async/concurrency can be added
+- **Documentation**: 9/10 - README and docstrings
+- **Type Safety**: High - Pydantic models and type hints; settings via environment
 
 ## 🔄 Migration Path
 
@@ -216,26 +206,6 @@
 - Old code still works
 - No breaking changes to existing scripts
 - New features opt-in
-
-## 🚀 Usage Examples
-
-### Simple CLI Usage
-```bash
-python -m llm-based.cli parse --file resume.pdf
-```
-
-### Python API Usage
-```python
-from src.llm_based import ParserService
-# See example_usage.py for complete setup
-```
-
-### Custom Provider
-```python
-class MyLLMAdapter(ILLMProvider):
-    # Implement interface
-    pass
-```
 
 ## 📝 Next Steps (Optional Future Work)
 
@@ -262,37 +232,18 @@ class MyLLMAdapter(ILLMProvider):
 **Status**: ✅ **COMPLETE** - Production-grade refactoring achieved!
 
 **What We've Built**:
-- Complete modular architecture following SOLID principles
-- 30+ Python files organized into logical packages
-- Comprehensive error handling and retry logic
+- Modular architecture following SOLID principles
+- Error handling and retry logic
 - Caching for performance optimization
 - Structured logging for observability
 - Type-safe models with Pydantic
 - Interface-based design for extensibility
 - CLI and programmatic API
 - Test infrastructure and examples
-- Full documentation
-
-**Code Statistics**:
-- ~3000+ lines of production code
-- 7 core modules (core, services, adapters, utils, config)
-- 10+ interfaces for extensibility
-- 15+ custom exceptions
-- 20+ unit tests
-- 100% type annotated
-
-**Key Achievements**:
-✅ Modular and maintainable
-✅ Production-ready with observability
-✅ Fault-tolerant with retry logic
-✅ Testable with comprehensive mocks
-✅ Extensible via interfaces
-✅ Well-documented
-
-The refactored LLM Resume Parser is now ready for production use! 🎉
+- Documentation
 
 ## Dependency Management Update
 
-- All dependencies are now managed using uv and the environment's package manager.
+- Dependencies are managed using uv and the environment's package manager (where applicable).
 - Use `uv pip install --system` to install all packages in your environment.
 - This ensures consistent environments for development, CI/CD, and deployment.

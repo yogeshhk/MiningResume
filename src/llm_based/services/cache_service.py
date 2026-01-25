@@ -12,6 +12,7 @@ from threading import Lock
 from src.llm_based.core.interfaces import ICacheService
 from src.llm_based.core.exceptions import CacheError
 from src.llm_based.utils.logger import get_logger
+from src.llm_based.config.settings import settings
 
 logger = get_logger(__name__)
 
@@ -19,17 +20,13 @@ logger = get_logger(__name__)
 class InMemoryCacheService(ICacheService):
     """In-memory cache implementation with TTL support."""
 
-    def __init__(self, default_ttl_seconds: int = 3600):
+    def __init__(self):
         """
         Initialize in-memory cache.
-
-        Args:
-            default_ttl_seconds: Default time-to-live in seconds
         """
-        self.default_ttl = default_ttl_seconds
         self._cache: Dict[str, Tuple[str, float]] = {}
         self._lock = Lock()
-        logger.info("Initialized in-memory cache service", default_ttl=default_ttl_seconds)
+        logger.info("Initialized in-memory cache service", default_ttl=settings.cache_ttl_seconds)
 
     def get(self, key: str) -> Optional[str]:
         """
@@ -66,7 +63,7 @@ class InMemoryCacheService(ICacheService):
             value: Value to cache
             ttl_seconds: Time to live in seconds (uses default if None)
         """
-        ttl = ttl_seconds if ttl_seconds is not None else self.default_ttl
+        ttl = ttl_seconds if ttl_seconds is not None else settings.ttl_seconds
         expiry_time = time.time() + ttl
 
         with self._lock:
@@ -173,16 +170,12 @@ class CacheKeyGenerator:
 
 # Factory function for cache service
 def create_cache_service(
-    backend: str = "memory",
-    default_ttl_seconds: int = 3600,
     **kwargs
 ) -> ICacheService:
     """
     Create a cache service instance.
 
     Args:
-        backend: Cache backend type ("memory" or "redis")
-        default_ttl_seconds: Default TTL in seconds
         **kwargs: Additional backend-specific arguments
 
     Returns:
@@ -191,15 +184,15 @@ def create_cache_service(
     Raises:
         CacheError: If backend is not supported
     """
-    if backend.lower() == "memory":
-        return InMemoryCacheService(default_ttl_seconds=default_ttl_seconds)
-    elif backend.lower() == "redis":
+    if settings.cache_backend .lower() == "memory":
+        return InMemoryCacheService()
+    elif settings.cache_backend.lower() == "redis":
         # Placeholder for Redis implementation
         logger.warning("Redis cache not implemented, falling back to in-memory cache")
-        return InMemoryCacheService(default_ttl_seconds=default_ttl_seconds)
+        return InMemoryCacheService()
     else:
         raise CacheError(
-            f"Unsupported cache backend: {backend}",
-            details={"backend": backend, "supported_backends": ["memory", "redis"]}
+            f"Unsupported cache backend: {settings.cache_backend}",
+            details={"backend": settings.cache_backend, "supported_backends": ["memory", "redis"]}
         )
 

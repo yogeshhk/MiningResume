@@ -9,12 +9,13 @@ import yaml
 from typing import Optional, Dict, Any
 
 from src.llm_based.core.interfaces import ILLMProvider, ICacheService
-from src.llm_based.core.models import LLMRequest, LLMResponse, ParserConfig
+from src.llm_based.core.models import LLMRequest, LLMResponse
 from src.llm_based.core.exceptions import LLMServiceError, LLMTimeoutError
 from src.llm_based.utils.logger import get_logger
 from src.llm_based.utils.retry import retry_with_backoff
 from src.llm_based.utils.metrics import TokenCounter, get_metrics_collector
 from src.llm_based.services.cache_service import CacheKeyGenerator
+from src.llm_based.config.settings import settings
 
 logger = get_logger(__name__)
 
@@ -25,7 +26,6 @@ class LLMService:
     def __init__(
         self,
         provider: ILLMProvider,
-        config: ParserConfig,
         cache_service: Optional[ICacheService] = None,
     ):
         """
@@ -33,18 +33,16 @@ class LLMService:
 
         Args:
             provider: LLM provider implementation
-            config: Parser configuration
             cache_service: Optional cache service for responses
         """
         self.provider = provider
-        self.config = config
         self.cache_service = cache_service
         self.metrics = get_metrics_collector()
         self.prompts = self._load_prompts()
 
         logger.info(
-            f"Initialized LLM service with {provider.get_provider_name()}",
-            model=config.model_name,
+            f"Initialized LLM service with '{settings.llm_provider}' provider",
+            model=settings.llm_model_name,
             cache_enabled=cache_service is not None
         )
 
@@ -56,7 +54,6 @@ class LLMService:
             Dictionary of prompt templates
         """
         try:
-            from ..config.settings import settings
             prompts_file = settings.prompts_file
 
             if prompts_file.exists():
@@ -95,7 +92,8 @@ class LLMService:
             LLMServiceError: If generation fails
         """
         # Check cache first
-        if self.cache_service and self.config.cache_enabled:
+        cache_key = None
+        if self.cache_service and settings.cache_enabled:
             cache_key = CacheKeyGenerator.generate_key(
                 request.prompt, request.context, request.attribute
             )
@@ -107,8 +105,7 @@ class LLMService:
 
                 return LLMResponse(
                     content=cached_response,
-                    attribute=request.attribute,
-                    cached=True,
+                    attribute=request.attribute
                 )
 
         # Generate with retry
@@ -116,8 +113,8 @@ class LLMService:
             response = self._generate_with_retry(request)
 
             # Cache the response
-            if self.cache_service and self.config.cache_enabled:
-                self.cache_service.set(cache_key, response.content, self.config.cache_ttl_seconds)
+            if self.cache_service and settings.cache_enabled:
+                self.cache_service.set(cache_key, response.content, settings.cache_ttl_seconds)
 
             self.metrics.increment_counter("llm_calls")
             return response
@@ -159,7 +156,7 @@ class LLMService:
                 token_usage = TokenCounter.track_token_usage(
                     request.prompt + request.context,
                     response.content,
-                    model=self.config.model_name
+                    model=settings.llm_model_name
                 )
                 response.tokens_used = token_usage["total_tokens"]
 
@@ -193,9 +190,7 @@ class LLMService:
         request = LLMRequest(
             prompt=prompt,
             context=resume_text,
-            attribute=attribute,
-            max_tokens=self.config.max_tokens,
-            temperature=self.config.temperature,
+            attribute=attribute
         )
 
         # Generate response
@@ -218,8 +213,8 @@ class LLMService:
             extraction_prompts = self.prompts["extraction"]
 
             # Check for specific attribute prompt
-            if "attributes" in extraction_prompts and attribute in extraction_prompts["attributes"]:
-                template = extraction_prompts["attributes"][attribute].get("prompt")
+            if "extracted_attributes" in extraction_prompts and attribute in extraction_prompts["extracted_attributes"]:
+                template = extraction_prompts["extracted_attributes"][attribute].get("prompt")
                 if template:
                     return template
 

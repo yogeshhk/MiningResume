@@ -3,7 +3,7 @@ Validators utility for the llm_based package.
 
 Provides functions for validating data and inputs.
 """
-
+import json
 import re
 from pathlib import Path
 from typing import List, Optional
@@ -140,29 +140,25 @@ class ResumeDataValidator(IValidator):
         warnings = []
 
         # Validate email if present
-        if data.email and data.email.strip():
-            if not self.EMAIL_PATTERN.match(data.email.strip()):
-                warnings.append(f"Email format may be invalid: {data.email}")
+        #TODO: Needs to be more generic logic consider all fields
+        if 'email' in data.extracted_attributes and data.extracted_attributes['email'].strip():
+            if not self.EMAIL_PATTERN.match(data.extracted_attributes['email'].strip()):
+                warnings.append(f"Email format may be invalid: {data.extracted_attributes['email']}")
 
         # Validate phone if present
-        if data.phone_number and data.phone_number.strip():
-            if not self.PHONE_PATTERN.match(data.phone_number.strip()):
-                warnings.append(f"Phone format may be invalid: {data.phone_number}")
+        if 'phone_number' in data.extracted_attributes and data.extracted_attributes['phone_number'].strip():
+            if not self.PHONE_PATTERN.match(data.extracted_attributes['phone_number'].strip()):
+                warnings.append(f"Phone format may be invalid: {data.extracted_attributes['phone_number']}")
 
         # Check if at least some data was extracted
-        non_empty_fields = sum(
-            1 for field in [
-                data.name, data.email, data.phone_number, data.address,
-                data.objective, data.skills, data.employment_history,
-                data.education_history, data.accomplishments
-            ] if field and field.strip()
-        )
+        extracted_fields_count = len(data.extracted_attributes)
+        field_names_count = len(settings.extraction_attributes)
 
-        if non_empty_fields == 0:
+        if extracted_fields_count == 0:
             errors.append("No data could be extracted from the resume")
-        elif non_empty_fields < 3:
+        elif extracted_fields_count < 3:
             warnings.append(
-                f"Only {non_empty_fields} fields extracted - resume may be incomplete or poorly formatted"
+                f"Only {extracted_fields_count}/{field_names_count} fields extracted - resume may be incomplete or poorly formatted. Extracted fields: {str([key for key in data.extracted_attributes.keys()])} from expected '{str(settings.extraction_attributes)}' fields."
             )
 
         # Log warnings
@@ -182,7 +178,7 @@ class ResumeDataValidator(IValidator):
 
         logger.debug(
             f"Data validation passed: {data.filename}",
-            non_empty_fields=non_empty_fields,
+            non_empty_fields=data.extracted_attributes,
             warnings_count=len(warnings)
         )
         return True

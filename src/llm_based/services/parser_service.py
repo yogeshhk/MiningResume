@@ -10,11 +10,12 @@ from typing import List, Optional
 from collections import OrderedDict
 
 from src.llm_based.core.interfaces import IParserService, IDocumentReader, ITextExtractor
-from src.llm_based.core.models import ParserConfig, ParserResult, ExtractedResume, ResumeDocument
+from src.llm_based.core.models import ParserResult, ExtractedResume, ResumeDocument
 from src.llm_based.services.llm_service import LLMService
 from src.llm_based.utils.logger import get_logger
 from src.llm_based.utils.metrics import get_metrics_collector, PerformanceTimer
 from src.llm_based.utils.validators import ResumeDataValidator
+from src.llm_based.config.settings import settings
 
 logger = get_logger(__name__)
 
@@ -27,7 +28,6 @@ class ParserService(IParserService):
         document_reader: IDocumentReader,
         text_extractor: ITextExtractor,
         llm_service: LLMService,
-        config: Optional[ParserConfig] = None,
     ):
         """
         Initialize parser service.
@@ -41,37 +41,30 @@ class ParserService(IParserService):
         self.document_reader = document_reader
         self.text_extractor = text_extractor
         self.llm_service = llm_service
-        self.config = config or ParserConfig()
         self.validator = ResumeDataValidator()
         self.metrics = get_metrics_collector()
 
         logger.info(
             "Initialized parser service",
-            model=self.config.model_name,
-            attributes_count=len(self.config.attributes_to_extract)
+            model=settings.llm_model_name,
+            attributes_count=len(settings.extraction_attributes)
         )
 
-    def parse_single(self, file_path: Path, config: Optional[ParserConfig] = None) -> ParserResult:
+    def parse_single(self, file_path: Path) -> ParserResult:
         """
         Parse a single resume file.
 
         Args:
             file_path: Path to the resume file
-            config: Optional parser configuration override
 
         Returns:
             ParserResult with extracted data or error information
         """
-        # Use provided config or default
-        parse_config = config or self.config
-
         # Ensure Path object
         if not isinstance(file_path, Path):
             file_path = Path(file_path)
 
         start_time = time.time()
-        llm_calls = 0
-        cache_hits = 0
 
         logger.info(f"Starting parse for {file_path.name}")
 
@@ -83,15 +76,15 @@ class ParserService(IParserService):
                 # Step 2: Extract text
                 resume_text = self._extract_text(document)
 
-                # Step 3: Extract attributes using LLM
-                extracted_data = self._extract_attributes(
+                # Step 3: Extract extracted_attributes using LLM
+                extracted_resume = self._extract_attributes(
                     resume_text,
                     document.filename,
-                    parse_config.attributes_to_extract
+                    settings.extraction_attributes
                 )
 
                 # Step 4: Validate extracted data
-                self.validator.validate_extracted_data(extracted_data)
+                self.validator.validate_extracted_data(extracted_resume)
 
                 # Calculate metrics
                 processing_time = time.time() - start_time
@@ -110,7 +103,7 @@ class ParserService(IParserService):
 
                 return ParserResult(
                     success=True,
-                    extracted_data=extracted_data,
+                    extracted_data=extracted_resume,
                     processing_time_seconds=processing_time,
                     llm_calls_count=llm_calls,
                     cache_hits_count=cache_hits,
@@ -136,19 +129,17 @@ class ParserService(IParserService):
             )
 
     def parse_batch(
-        self, file_paths: List[Path], config: Optional[ParserConfig] = None
+        self, file_paths: List[Path],
     ) -> List[ParserResult]:
         """
         Parse multiple resume files.
 
         Args:
             file_paths: List of paths to resume files
-            config: Optional parser configuration override
 
         Returns:
             List of ParserResult for each file
         """
-        parse_config = config or self.config
         results = []
 
         logger.info(f"Starting batch parse for {len(file_paths)} files")
@@ -157,11 +148,11 @@ class ParserService(IParserService):
             logger.info(f"Processing file {i}/{len(file_paths)}: {file_path.name}")
 
             try:
-                result = self.parse_single(file_path, parse_config)
+                result = self.parse_single(file_path)
                 results.append(result)
 
                 # Stop on first error if fail_fast is enabled
-                if not result.success and parse_config.fail_fast:
+                if not result.success and settings.fail_fast_for_batch:
                     logger.warning(
                         "Stopping batch processing due to error (fail_fast=True)",
                         failed_file=file_path.name
@@ -171,7 +162,7 @@ class ParserService(IParserService):
             except Exception as e:
                 logger.error(f"Unexpected error processing {file_path.name}: {e}")
 
-                if parse_config.fail_fast:
+                if settings.fail_fast_for_batch:
                     raise
 
                 # Add error result
@@ -228,27 +219,23 @@ class ParserService(IParserService):
         self, resume_text: str, filename: str, attributes: List[str]
     ) -> ExtractedResume:
         """
-        Extract attributes from resume text using LLM.
+        Extract extracted_attributes from resume text using LLM.
 
         Args:
             resume_text: The resume text
             filename: Source filename
-            attributes: List of attributes to extract
+            attributes: List of extracted_attributes to extract
 
         Returns:
             ExtractedResume with extracted data
         """
-        extracted_dict = OrderedDict()
-        extracted_dict["filename"] = filename
-
+        extracted_resume = ExtractedResume(filename=filename)
         for attr in attributes:
             try:
                 logger.debug(f"Extracting attribute: {attr}", file=filename)
                 value = self.llm_service.extract_attribute(resume_text, attr)
-
-                # Map attribute to field name (handle spaces and special chars)
                 field_name = attr.lower().replace(" ", "_").replace("-", "_")
-                extracted_dict[field_name] = value
+                extracted_resume.extracted_attributes[field_name] = value
 
             except Exception as e:
                 logger.warning(
@@ -257,13 +244,7 @@ class ParserService(IParserService):
                 )
                 # Set empty value on failure (partial results)
                 field_name = attr.lower().replace(" ", "_").replace("-", "_")
-                extracted_dict[field_name] = ""
+                extracted_resume.extracted_attributes[field_name] = ""
 
-        # Create ExtractedResume model
-        try:
-            return ExtractedResume(**extracted_dict)
-        except Exception as e:
-            logger.error(f"Failed to create ExtractedResume model: {e}")
-            # Create with minimal data
-            return ExtractedResume(filename=filename)
+        return extracted_resume
 
