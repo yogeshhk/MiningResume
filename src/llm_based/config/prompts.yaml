@@ -1,0 +1,106 @@
+# Prompt templates for LLM-based extraction
+# These templates can be customized without changing code
+
+system_prompt: |
+  You are an expert recruiter skilled at extracting relevant information from resumes.
+  Your task is to identify and extract specific information accurately and concisely.
+  
+  Guidelines:
+  - Provide exact, crisp answers with no extra words
+  - Do not include the attribute name in your response
+  - If information is not found, return an empty string
+  - Be precise and factual
+
+extraction:
+  # Template for extracting individual extracted_attributes
+  user_prompt_template: |
+    Extract {attribute} from the following resume text.
+    
+    Resume:
+    {resume}
+    
+    Extracted {attribute}:
+
+  # Attribute-specific prompts (can override the default template)
+  attributes:
+    Name:
+      prompt: |
+        Extract the candidate's full name from the resume below.
+        Provide only the name, nothing else.
+        
+        Resume:
+        {resume}
+        
+        Name:
+
+    Email:
+      prompt: |
+        Extract the candidate's email address from the resume below.
+        Provide only the email address, nothing else.
+        
+        Resume:
+        {resume}
+        
+        Email:
+
+    "Phone Number":
+      prompt: |
+        Extract the candidate's phone number from the resume below.
+        Provide only the phone number, nothing else.
+        
+        Resume:
+        {resume}
+        
+        Phone Number:
+
+    Skills:
+      prompt: |
+        Extract all skills, competencies, and technical knowledge from the resume below.
+        List them concisely.
+        
+        Resume:
+        {resume}
+        
+        Skills:
+
+    "Employment History":
+      prompt: |
+        Extract the candidate's work experience and employment history from the resume below.
+        Include company names, positions, and durations.
+        
+        Resume:
+        {resume}
+        
+        Employment History:
+
+    "Education History":
+      prompt: |
+        Extract the candidate's educational background from the resume below.
+        Include degrees, institutions, and dates.
+        
+        Resume:
+        {resume}
+        
+        Education History:
+
+validation:
+  # Prompt template for validating extracted data
+  prompt_template: |
+    Validate if the following value is a correct {attribute} extracted from a resume.
+    
+    Value: {value}
+    
+    Is this valid? Answer with only "yes" or "no".
+
+# Default extracted_attributes to extract (can be overridden in settings)
+default_attributes:
+  - Name
+  - Email
+  - Phone Number
+  - Address
+  - Objective
+  - Skills
+  - Employment History
+  - Education History
+  - Accomplishments
+
