@@ -1,0 +1,17 @@
+{
+  "filename": "test6.pdf",
+  "extracted_attributes": {
+    "name": "Jake Ryan",
+    "email": "+91 750223 35342 | jake@su.edu | linkedin.com/in/jake | github.com/jake",
+    "phone_number": "+91 750223 35342",
+    "address": "+91 750223 35342",
+    "objective": "objective",
+    "skills": "Java, Python, C/C++, SQL, JavaScript, HTML/CSS, R",
+    "employment_history": "information technology support specialist",
+    "education_history": "Southwestern University Georgetown, TX Bachelor of Arts in Computer Science, Minor in Business Aug. 2018 – May 2021 Blinn College Bryan, TX Associate’s in Liberal Arts Aug. 2014 – May 2018",
+    "projects": "Gitlytics | Python, Flask, React, PostgreSQL, Docker",
+    "accomplishments": "Developed a REST API using FastAPI and PostgreSQL to store data • Developed a full-stack web application using Flask, React, PostgreSQL and Docker Information Technology Support Specialist Sep. 2018 – Present Southwestern University Georgetown, TX • Communicate with managers to set up campus computers used on campus • Assess and troubleshoot computer problems brought by students, faculty and staff Artificial Intelligence Research Assistant May 2019 – July 2019 Southwestern University Georgetown, TX • Explored methods to generate video game dungeons based off of The Legend of Zelda • Conducted a human subject study to determine which video game dungeon generation technique is enjoyable"
+  },
+  "extraction_timestamp": "2026-01-28T20:33:28.820393",
+  "extraction_metadata": {}
+}

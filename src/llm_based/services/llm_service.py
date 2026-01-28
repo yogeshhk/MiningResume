@@ -238,3 +238,16 @@ class LLMService:
             logger.error(f"Health check failed: {e}")
             return False
 
+    #This will be used for chatbot functionality
+    def ask(self, prompt: str, max_tokens: int = 512) -> str:
+        """
+        Ask a free-form question to the LLM.
+        """
+        request = LLMRequest(
+            prompt="{resume}",
+            context=prompt,
+            attribute="chat"
+        )
+
+        response = self.generate(request)
+        return response.content

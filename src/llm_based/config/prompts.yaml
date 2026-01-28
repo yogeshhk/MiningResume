@@ -1,98 +1,184 @@
-# Prompt templates for LLM-based extraction
-# These templates can be customized without changing code
+# Prompt templates for LLM-based resume extraction
+# Designed to force concise, attribute-only outputs
+# No regex required – LLM-only enforcement
 
 system_prompt: |
-  You are an expert recruiter skilled at extracting relevant information from resumes.
-  Your task is to identify and extract specific information accurately and concisely.
-  
-  Guidelines:
-  - Provide exact, crisp answers with no extra words
-  - Do not include the attribute name in your response
-  - If information is not found, return an empty string
-  - Be precise and factual
+  You are an expert resume parser.
+  Your job is to extract ONLY the requested information from resumes.
+
+  GLOBAL RULES (VERY IMPORTANT):
+  - Output ONLY the requested value
+  - Do NOT include explanations, labels, or extra text
+  - Do NOT repeat resume text
+  - Keep responses SHORT and precise
+  - If the value is not clearly present, return an empty string
 
 extraction:
-  # Template for extracting individual extracted_attributes
+  # Default fallback prompt (used if no attribute-specific prompt exists)
   user_prompt_template: |
-    Extract {attribute} from the following resume text.
-    
+    You are extracting ONE value from a resume.
+
+    Attribute: "{attribute}"
+
+    RULES:
+    - Output ONLY the extracted value
+    - Maximum 5 words unless a list is explicitly requested
+    - No sentences or paragraphs
+    - If uncertain, return an empty string
+
     Resume:
     {resume}
-    
-    Extracted {attribute}:
 
-  # Attribute-specific prompts (can override the default template)
+    Output:
+
+  # Attribute-specific prompts
   attributes:
     Name:
       prompt: |
-        Extract the candidate's full name from the resume below.
-        Provide only the name, nothing else.
-        
+        Extract ONLY the candidate's full name.
+
+        RULES:
+        - 2 to 4 words only
+        - Capitalized names only
+        - No titles, roles, emails, or other text
+        - If unclear, return an empty string
+
         Resume:
         {resume}
-        
+
         Name:
 
     Email:
       prompt: |
-        Extract the candidate's email address from the resume below.
-        Provide only the email address, nothing else.
-        
+        Extract ONLY the email address.
+
+        RULES:
+        - Must contain '@'
+        - No spaces
+        - No surrounding text
+        - If not present, return an empty string
+
         Resume:
         {resume}
-        
+
         Email:
 
     "Phone Number":
       prompt: |
-        Extract the candidate's phone number from the resume below.
-        Provide only the phone number, nothing else.
-        
+        Extract ONLY the phone number.
+
+        RULES:
+        - Numbers and symbols only (+, -, spaces, parentheses)
+        - No names or text
+        - If not present, return an empty string
+
         Resume:
         {resume}
-        
+
         Phone Number:
+
+    Address:
+      prompt: |
+        Extract ONLY the candidate's location or address.
+
+        RULES:
+        - City, State, Country format if possible
+        - Do NOT include job history or contact info
+        - Keep under 10 words
+        - If not found, return an empty string
+
+        Resume:
+        {resume}
+
+        Address:
+
+    Objective:
+      prompt: |
+        Extract ONLY the candidate's professional objective or summary.
+
+        RULES:
+        - One short sentence max
+        - Do NOT include job history
+        - If no objective exists, return an empty string
+
+        Resume:
+        {resume}
+
+        Objective:
 
     Skills:
       prompt: |
-        Extract all skills, competencies, and technical knowledge from the resume below.
-        List them concisely.
-        
+        Extract ONLY skills, tools, and technical competencies.
+
+        RULES:
+        - Return a comma-separated list
+        - Max 15 items
+        - No job descriptions or sentences
+        - Use concise skill names only
+
         Resume:
         {resume}
-        
+
         Skills:
 
     "Employment History":
       prompt: |
-        Extract the candidate's work experience and employment history from the resume below.
-        Include company names, positions, and durations.
-        
+        Extract ONLY employment history entries.
+
+        RULES:
+        - One job per line
+        - Format: Role | Company | Dates
+        - Do NOT include skills or education
+        - Keep entries concise
+
         Resume:
         {resume}
-        
+
         Employment History:
 
     "Education History":
       prompt: |
-        Extract the candidate's educational background from the resume below.
-        Include degrees, institutions, and dates.
-        
+        Extract ONLY education entries.
+
+        RULES:
+        - One degree per line
+        - Format: Degree | Institution | Dates
+        - No work experience or skills
+
         Resume:
         {resume}
-        
+
         Education History:
 
-validation:
-  # Prompt template for validating extracted data
-  prompt_template: |
-    Validate if the following value is a correct {attribute} extracted from a resume.
-    
-    Value: {value}
-    
-    Is this valid? Answer with only "yes" or "no".
+    Accomplishments:
+      prompt: |
+        Extract ONLY notable accomplishments or achievements.
 
-# Default extracted_attributes to extract (can be overridden in settings)
+        RULES:
+        - Bullet-style phrases
+        - No job descriptions
+        - Max 5 items
+        - If none found, return an empty string
+
+        Resume:
+        {resume}
+
+        Accomplishments:
+
+validation:
+  # Optional validation step (LLM-based)
+  prompt_template: |
+    Determine if the following value is a valid "{attribute}" extracted from a resume.
+
+    Value:
+    {value}
+
+    Rules:
+    - Answer ONLY "yes" or "no"
+    - If partially correct, answer "no"
+
+    Answer:
+
 default_attributes:
   - Name
   - Email
@@ -103,4 +189,3 @@ default_attributes:
   - Employment History
   - Education History
   - Accomplishments
-

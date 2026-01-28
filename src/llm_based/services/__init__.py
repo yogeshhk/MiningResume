@@ -5,6 +5,7 @@ from src.llm_based.services.document_reader import BaseDocumentReader, DocumentR
 from src.llm_based.services.text_extractor import TextExtractorService, BaseTextExtractor
 from src.llm_based.services.llm_service import LLMService
 from src.llm_based.services.parser_service import ParserService
+from src.llm_based.services.neo4j_service import Neo4jService
 
 __all__ = [
     # Cache
@@ -21,4 +22,6 @@ __all__ = [
     "LLMService",
     # Parser Service
     "ParserService",
+    # Neo4j Service
+    "Neo4jService",
 ]
