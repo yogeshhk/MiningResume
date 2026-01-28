@@ -20,6 +20,10 @@ class Settings:
     app_version: str = os.getenv("APP_VERSION", "Application version")
     environment: str = os.getenv("ENVIRONMENT", "Environment (development/production)")
 
+    #neo4j settings
+    neo4j_uri: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    neo4j_username: str = os.getenv("NEO4J_USERNAME", "neo4j")
+    neo4j_password: str = os.getenv("NEO4J_PASSWORD", "password")
     # LLM Provider Settings
     llm_provider: str = os.getenv("LLM_PROVIDER", "huggingface")
     llm_model_name: str = os.getenv("LLM_MODEL_NAME", "google/flan-t5-large")
@@ -36,7 +40,7 @@ class Settings:
     ollama_api_key: Optional[str] = os.getenv("OLLAMA_API_KEY")
 
     # Extraction Settings
-    extraction_attributes: List[str] = json.loads(os.getenv("EXTRACTION_ATTRIBUTES", '["Name", "Email", "Phone Number", "Address", "Objective", "Skills", "Employment History", "Education History", "Accomplishments"]'))
+    extraction_attributes: List[str] = json.loads(os.getenv("EXTRACTION_ATTRIBUTES", '["Name", "Email", "Phone Number", "Address", "Objective", "Skills", "Employment History", "Education History", "Projects", "Accomplishments"]'))
     extraction_attributes = [attr.lower().strip() for attr in extraction_attributes]
 
     # Cache Settings
@@ -65,10 +69,7 @@ class Settings:
     data_folder: Path = Path(__file__).parent.parent.parent / "data"
     logs_folder: Path = Path(__file__).parent.parent.parent / "logs"
     log_file_path: str = Path(logs_folder) / "app.log"
-    prompts_file: Path = Field(
-        default_factory=lambda: Path(__file__).parent / "prompts.yaml",
-        description="Path to prompts configuration file"
-    )
+    prompts_file: Path = Path(__file__).parent / "prompts.yaml"
 
     def ensure_directories(self) -> None:
         """Ensure necessary directories exist."""

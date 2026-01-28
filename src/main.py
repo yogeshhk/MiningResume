@@ -5,15 +5,16 @@
 import json
 from pathlib import Path
 
-from llm_based.adapters import create_text_extractor_for_format, HuggingFaceAdapter
-from llm_based.adapters.ollama_adapter import OllamaAdapter
-from llm_based.config import settings
-from llm_based.core import FileFormat
-from llm_based.services import BaseDocumentReader, TextExtractorService, create_cache_service, LLMService, ParserService
+from src.llm_based.adapters import create_text_extractor_for_format, HuggingFaceAdapter
+from src.llm_based.adapters.ollama_adapter import OllamaAdapter
+from src.llm_based.config import settings
+from src.llm_based.core import FileFormat
+from src.llm_based.services import BaseDocumentReader, TextExtractorService, create_cache_service, LLMService, ParserService, Neo4jService
+from src.llm_based.config.settings import settings
 
 # ---- Configuration (edit these constants as needed) ----
 MODE = "llm"  # "rule" or "llm"
-FILE_PATH = Path(__file__).resolve().parent.parent / "data" / "YogeshKulkarniLinkedInProfile.pdf"
+FILE_PATH = Path(__file__).resolve().parent.parent / "data" / "test6.pdf"
 # -------------------------------------------------------
 
 
@@ -51,6 +52,7 @@ def run_llm_based(file_path: Path) -> None:
 
     #TODO: Refactor to a common setup function shared with example_usage.py
     def setup_parser():
+        print("Setting up document reader, text extractor, cache, LLM service, and parser...")
         # Create document reader
         document_reader = BaseDocumentReader()
 
@@ -100,8 +102,9 @@ def run_llm_based(file_path: Path) -> None:
     if result.success:
         print("✅ Parsing successful!\n")
         print("--- Extracted Data ---")
-        print(result.extracted_data.model_dump_json())
-
+        print(json.loads(result.extracted_data.model_dump_json()))
+        with open("parsed_resume_llm_based.json", "w", encoding="utf-8") as f:
+            json.dump(json.loads(result.extracted_data.model_dump_json()), f, indent=2,ensure_ascii=False)
         print(f"\n--- Metrics ---")
         print(f"Processing time: {result.processing_time_seconds:.2f}s")
         print(f"LLM calls: {result.llm_calls_count}")
@@ -124,6 +127,16 @@ def main():
     else:
         raise ValueError(f"Invalid MODE '{MODE}'. Use 'rule' or 'llm'.")
 
+    with open("parsed_resume_llm_based.json", "r", encoding="utf-8") as f:
+        resume_data = json.load(f)
+
+    neo4j_service = Neo4jService()
+
+    # overwrite existing resume graph
+    neo4j_service.upsert_resume_graph(
+        resume_json=resume_data,
+        overwrite=True
+    )
 
 if __name__ == "__main__":
     main()
