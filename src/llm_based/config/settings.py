@@ -20,6 +20,11 @@ class Settings:
     app_version: str = os.getenv("APP_VERSION", "Application version")
     environment: str = os.getenv("ENVIRONMENT", "Environment (development/production)")
 
+    #neo4j settings
+    neo4j_uri: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    neo4j_username: str = os.getenv("NEO4J_USERNAME", "neo4j")
+    neo4j_password: str = os.getenv("NEO4J_PASSWORD", "password")
+    
     # LLM Provider Settings
     llm_provider: str = os.getenv("LLM_PROVIDER", "huggingface")
     llm_model_name: str = os.getenv("LLM_MODEL_NAME", "google/flan-t5-large")
