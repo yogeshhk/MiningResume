@@ -213,8 +213,8 @@ class LLMService:
             extraction_prompts = self.prompts["extraction"]
 
             # Check for specific attribute prompt
-            if "extracted_attributes" in extraction_prompts and attribute in extraction_prompts["extracted_attributes"]:
-                template = extraction_prompts["extracted_attributes"][attribute].get("prompt")
+            if "attributes" in extraction_prompts and attribute in extraction_prompts["attributes"]:
+                template = extraction_prompts["attributes"][attribute].get("prompt")
                 if template:
                     return template
 

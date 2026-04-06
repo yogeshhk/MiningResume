@@ -7,7 +7,6 @@ import json
 import os
 from pathlib import Path
 from typing import Optional, List
-from pydantic import Field
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -31,7 +30,7 @@ class Settings:
     llm_temperature: float = float(os.getenv("LLM_TEMPERATURE", 0.7))
     llm_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", 2048))
     llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", 120))
-    use_local_llm: bool = bool(os.getenv("USE_LOCAL_LLM", True))
+    use_local_llm: bool = os.getenv("USE_LOCAL_LLM", "true").lower() in ("1", "true", "yes")
 
     # HuggingFace Settings
     hf_api_token: Optional[str] = os.getenv("HF_API_TOKEN")
@@ -45,7 +44,7 @@ class Settings:
     extraction_attributes = [attr.lower().strip() for attr in extraction_attributes]
 
     # Cache Settings
-    cache_enabled: bool = bool(os.getenv("CACHE_ENABLED", True))
+    cache_enabled: bool = os.getenv("CACHE_ENABLED", "true").lower() in ("1", "true", "yes")
     cache_ttl_seconds: int = int(os.getenv("CACHE_TTL_SECONDS", 3600))
     cache_backend: str = os.getenv("CACHE_BACKEND", "memory")
 
@@ -59,7 +58,7 @@ class Settings:
     max_file_size_mb: int = int(os.getenv("MAX_FILE_SIZE_MB", 10))
     supported_formats: List[str] = json.loads(os.getenv("SUPPORTED_FORMATS", '["pdf", "docx", "txt"]'))
     supported_formats = [fmt.lower().strip() for fmt in supported_formats]
-    fail_fast_for_batch: bool = bool(os.getenv("FAIL_FAST_FOR_BATCH", True))
+    fail_fast_for_batch: bool = os.getenv("FAIL_FAST_FOR_BATCH", "true").lower() in ("1", "true", "yes")
 
     # Logging Settings
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
@@ -70,10 +69,7 @@ class Settings:
     data_folder: Path = Path(__file__).parent.parent.parent / "data"
     logs_folder: Path = Path(__file__).parent.parent.parent / "logs"
     log_file_path: str = Path(logs_folder) / "app.log"
-    prompts_file: Path = Field(
-        default_factory=lambda: Path(__file__).parent / "prompts.yaml",
-        description="Path to prompts configuration file"
-    )
+    prompts_file: Path = Path(__file__).parent / "prompts.yaml"
 
     def ensure_directories(self) -> None:
         """Ensure necessary directories exist."""

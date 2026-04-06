@@ -29,13 +29,12 @@ class TestInMemoryCacheService:
         assert cache.get("nonexistent") is None
 
     def test_ttl_expiration(self):
-        """Test TTL expiration."""
+        """Test TTL expiration with an explicit short TTL."""
         cache = InMemoryCacheService()
 
-        cache.set("key1", "value1")
+        cache.set("key1", "value1", ttl_seconds=1)
         assert cache.get("key1") == "value1"
 
-        # Wait for expiration
         time.sleep(1.1)
         assert cache.get("key1") is None
 
@@ -130,9 +129,12 @@ class TestCreateCacheService:
 
         assert isinstance(cache, InMemoryCacheService)
 
-    def test_create_unsupported_backend(self):
-        """Test creating unsupported cache backend."""
+    def test_create_unsupported_backend(self, monkeypatch):
+        """Test that an unsupported cache backend raises CacheError."""
         from src.llm_based.core.exceptions import CacheError
+        from src.llm_based.config import settings as s
+
+        monkeypatch.setattr(s.settings, "cache_backend", "unsupported_backend")
 
         with pytest.raises(CacheError):
             create_cache_service()

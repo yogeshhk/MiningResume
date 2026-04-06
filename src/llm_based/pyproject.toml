@@ -4,7 +4,7 @@ version = "2.0.0"
 description = "Production-grade LLM Resume Parser with SOLID principles, modularity, and observability."
 authors = ["Yogesh H Kulkarni <yogeshkulkarni@gmail.com>"]
 license = "MIT"
-readme = "src.llm_based/README.md"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "PyPDF2>=3.0.0",

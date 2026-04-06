@@ -5,55 +5,7 @@ This shows how to use the parser programmatically.
 """
 from pathlib import Path
 
-from src.llm_based.services.document_reader import BaseDocumentReader
-from src.llm_based.services.text_extractor import TextExtractorService
-from src.llm_based.services.llm_service import LLMService
-from src.llm_based.services.parser_service import ParserService
-from src.llm_based.services.cache_service import create_cache_service
-from src.llm_based.adapters.file_adapters import create_text_extractor_for_format
-from src.llm_based.adapters.huggingface_adapter import HuggingFaceAdapter
-from src.llm_based.adapters.ollama_adapter import OllamaAdapter
-from src.llm_based.core.models import FileFormat
-from src.llm_based.config.settings import settings
-
-
-def setup_parser():
-    # Create document reader
-    document_reader = BaseDocumentReader()
-
-    # Create text extractor service
-    text_extractor = TextExtractorService()
-
-    # Register format-specific extractors
-    for file_format in FileFormat:
-        extractor = create_text_extractor_for_format(file_format)
-        text_extractor.register_extractor(file_format, extractor)
-
-    # Create cache service
-    cache_service = create_cache_service()
-
-    # Create LLM provider
-    if settings.llm_provider.lower() == "huggingface":
-        llm_provider = HuggingFaceAdapter()
-    elif settings.llm_provider.lower() == "ollama":
-        llm_provider = OllamaAdapter()
-    else:
-        raise ValueError(f"Unsupported LLM provider: {settings.llm_provider}")
-
-    # Create LLM service
-    llm_service = LLMService(
-        provider=llm_provider,
-        cache_service=cache_service,
-    )
-
-    # Create parser service
-    parser_service = ParserService(
-        document_reader=document_reader,
-        text_extractor=text_extractor,
-        llm_service=llm_service,
-    )
-
-    return parser_service
+from src.llm_based.services.parser_factory import create_parser
 
 
 def main():
@@ -71,7 +23,7 @@ def main():
         return
 
     print(f"Setting up parser...")
-    parser = setup_parser()
+    parser = create_parser()
 
     print(f"Parsing: {sample_resume.name}\n")
 

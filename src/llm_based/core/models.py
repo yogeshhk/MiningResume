@@ -65,15 +65,15 @@ class ExtractedResume(BaseModel):
     extraction_metadata: Dict[str, Any] = Field(default_factory=dict)
 
     def __getitem__(self, attribute_name: str) -> Optional[str]:
-        return self.fields.get(attribute_name)
+        return self.extracted_attributes.get(attribute_name)
 
-    def __setitem__(self, attribute_name, attribute_value: Optional[str]) -> None:
-        self.fields[attribute_name] = attribute_value
+    def __setitem__(self, attribute_name: str, attribute_value: Optional[str]) -> None:
+        self.extracted_attributes[attribute_name] = attribute_value
 
     def to_json(self, **kwargs) -> str:
         """Serialize to JSON string."""
         import json
-        return json.dumps(self.to_dict(), **kwargs)
+        return json.dumps(self.model_dump(mode="json"), **kwargs)
 
 
 class LLMRequest(BaseModel):

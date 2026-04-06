@@ -3,7 +3,6 @@ Validators utility for the llm_based package.
 
 Provides functions for validating data and inputs.
 """
-import json
 import re
 from pathlib import Path
 from typing import List, Optional

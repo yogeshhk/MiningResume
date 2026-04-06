@@ -5,11 +5,7 @@
 import json
 from pathlib import Path
 
-from llm_based.adapters import create_text_extractor_for_format, HuggingFaceAdapter
-from llm_based.adapters.ollama_adapter import OllamaAdapter
-from llm_based.config import settings
-from llm_based.core import FileFormat
-from llm_based.services import BaseDocumentReader, TextExtractorService, create_cache_service, LLMService, ParserService
+from llm_based.services.parser_factory import create_parser
 
 # ---- Configuration (edit these constants as needed) ----
 MODE = "llm"  # "rule" or "llm"
@@ -44,57 +40,18 @@ def run_llm_based(file_path: Path) -> None:
     """Run the LLM-based pipeline with minimal wiring."""
     print("=== LLM Resume Parser Example ===\n")
 
-    if not FILE_PATH.exists():
-        print(f"Error: Sample resume not found at {FILE_PATH}")
+    if not file_path.exists():
+        print(f"Error: Resume not found at {file_path}")
         print("Please place a resume file in the data folder.")
         return
 
-    #TODO: Refactor to a common setup function shared with example_usage.py
-    def setup_parser():
-        # Create document reader
-        document_reader = BaseDocumentReader()
-
-        # Create text extractor service
-        text_extractor = TextExtractorService()
-
-        # Register format-specific extractors
-        for file_format in FileFormat:
-            extractor = create_text_extractor_for_format(file_format)
-            text_extractor.register_extractor(file_format, extractor)
-
-        # Create cache service
-        cache_service = create_cache_service()
-
-        # Create LLM provider
-        if settings.llm_provider.lower() == "huggingface":
-            llm_provider = HuggingFaceAdapter()
-        elif settings.llm_provider.lower() == "ollama":
-            llm_provider = OllamaAdapter()
-        else:
-            raise ValueError(f"Unsupported LLM provider: {settings.llm_provider}")
-
-        # Create LLM service
-        llm_service = LLMService(
-            provider=llm_provider,
-            cache_service=cache_service,
-        )
-
-        # Create parser service
-        parser_service = ParserService(
-            document_reader=document_reader,
-            text_extractor=text_extractor,
-            llm_service=llm_service,
-        )
-
-        return parser_service
-
     print(f"Setting up parser...")
-    parser = setup_parser()
+    parser = create_parser()
 
-    print(f"Parsing: {FILE_PATH.name}\n")
+    print(f"Parsing: {file_path.name}\n")
 
     # Parse the resume
-    result = parser.parse_single(FILE_PATH)
+    result = parser.parse_single(file_path)
 
     # Display results
     if result.success:

@@ -63,7 +63,7 @@ class InMemoryCacheService(ICacheService):
             value: Value to cache
             ttl_seconds: Time to live in seconds (uses default if None)
         """
-        ttl = ttl_seconds if ttl_seconds is not None else settings.ttl_seconds
+        ttl = ttl_seconds if ttl_seconds is not None else settings.cache_ttl_seconds
         expiry_time = time.time() + ttl
 
         with self._lock:

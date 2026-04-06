@@ -64,7 +64,5 @@ class LLMRateLimitError(LLMServiceError):
     pass
 
 
-class RetryExhaustedError(ParserException):
-    """Raised when all retry attempts are exhausted."""
-    pass
+# RetryExhaustedError lives in utils/retry.py where the retry decorator raises it.
 

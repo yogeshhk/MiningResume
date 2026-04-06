@@ -5,7 +5,6 @@ Provides a factory pattern for format-specific readers.
 """
 
 from pathlib import Path
-from typing import Dict, Type
 
 from src.llm_based.core.interfaces import IDocumentReader
 from src.llm_based.core.models import ResumeDocument, FileFormat
@@ -97,83 +96,4 @@ class BaseDocumentReader(IDocumentReader):
             return False
 
 
-class DocumentReaderFactory:
-    """Factory for creating appropriate document readers."""
-
-    _readers: Dict[FileFormat, Type[IDocumentReader]] = {}
-    _default_reader: IDocumentReader = None
-
-    @classmethod
-    def register_reader(cls, file_format: FileFormat, reader_class: Type[IDocumentReader]) -> None:
-        """
-        Register a reader for a specific format.
-
-        Args:
-            file_format: File format enum
-            reader_class: Reader class to register
-        """
-        cls._readers[file_format] = reader_class
-        logger.debug(f"Registered reader for {file_format.value}", reader_class=reader_class.__name__)
-
-    @classmethod
-    def get_reader(cls, file_format: FileFormat) -> IDocumentReader:
-        """
-        Get a reader for the specified format.
-
-        Args:
-            file_format: File format enum
-
-        Returns:
-            IDocumentReader instance
-
-        Raises:
-            UnsupportedFormatError: If format is not supported
-        """
-        if file_format in cls._readers:
-            reader_class = cls._readers[file_format]
-            return reader_class()
-
-        # Fallback to default reader
-        if cls._default_reader is None:
-            cls._default_reader = BaseDocumentReader()
-
-        if cls._default_reader.supports_format(file_format.value):
-            return cls._default_reader
-
-        raise UnsupportedFormatError(
-            f"No reader available for format: {file_format.value}",
-            details={"format": file_format.value}
-        )
-
-    @classmethod
-    def create_reader_for_file(cls, file_path: Path) -> IDocumentReader:
-        """
-        Create an appropriate reader based on file extension.
-
-        Args:
-            file_path: Path to the file
-
-        Returns:
-            IDocumentReader instance
-
-        Raises:
-            UnsupportedFormatError: If format is not supported
-        """
-        if not isinstance(file_path, Path):
-            file_path = Path(file_path)
-
-        file_ext = file_path.suffix.lower().lstrip('.')
-
-        try:
-            file_format = FileFormat(file_ext)
-            return cls.get_reader(file_format)
-        except ValueError:
-            raise UnsupportedFormatError(
-                f"Unsupported file format: {file_ext}",
-                details={"file_path": str(file_path), "extension": file_ext}
-            )
-
-
-# Initialize default reader
-DocumentReaderFactory._default_reader = BaseDocumentReader()
 
