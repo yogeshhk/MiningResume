@@ -1,0 +1,44 @@
+[project]
+name = "miningresume-benchmarking"
+version = "0.1.0"
+description = "Benchmarking suite for resume document parsers"
+requires-python = ">=3.10"
+
+dependencies = [
+    # ── Parser libraries ───────────────────────────────────────────────
+    # Docling (IBM) — PDF, DOCX, PPTX, HTML → structured Markdown
+    "docling>=2.0",
+
+    # MarkItDown (Microsoft) — multi-format → Markdown
+    "markitdown>=0.0.1",
+
+    # Unstructured — layout-aware chunking for PDF, DOCX, HTML, …
+    # Extra [pdf] requires poppler on PATH:
+    #   Windows : choco install poppler  OR  conda install -c conda-forge poppler
+    #   Linux   : apt install poppler-utils
+    #   macOS   : brew install poppler
+    "unstructured[pdf,docx]>=0.10",
+
+    # PyMuPDF — fast native PDF extraction
+    "pymupdf>=1.23",
+
+    # pdfplumber — precise PDF + table extraction (wraps pdfminer.six)
+    "pdfplumber>=0.10",
+
+    # python-docx — baseline DOCX extractor
+    "python-docx>=1.0",
+]
+
+[project.optional-dependencies]
+# Run  `pip install -e ".[dev]"` to also get reporting helpers
+dev = [
+    "pandas>=2.0",
+    "tabulate>=0.9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

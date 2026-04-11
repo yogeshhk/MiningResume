@@ -2,3 +2,6 @@
 .venv
 .env
 logs
+src/benchmarking/results/*.json
+src/benchmarking/results/*.csv
+src/benchmarking/results/*.html

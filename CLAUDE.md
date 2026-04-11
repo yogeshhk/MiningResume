@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MiningResume is a resume parsing library with two engines:
+MiningResume is a resume parsing library with three engines and a benchmarking module:
 - **LLM-based** (`src/llm_based/`): Production-grade v2.0 with SOLID principles, pluggable LLM providers (HuggingFace, Ollama, OpenAI placeholder), caching, retry, and observability.
 - **Rule-based** (`src/rule_based/`): Regex extraction driven by an XML config file.
 - **Knowledge base** (`src/knowledge_base/`): Nascent Neo4j-based graph components.
+- **Benchmarking** (`src/benchmarking/`): Compares six open-source document-parsing libraries across all resume files in `data/`, producing a CSV + HTML report.
 
 The mode is selected via the `MODE` constant at the top of `src/main.py`.
 
@@ -80,6 +81,33 @@ config/       → Pydantic BaseSettings (env-driven) + externalized prompts.yaml
 
 `src/rule_based/regex_resume_parser.py` loads extraction rules from `src/rule_based/regex_config.xml` (terms, methods, patterns per field). No separate install needed beyond standard Python libraries.
 
+## Benchmarking (`src/benchmarking/`)
+
+Compares six open-source document parsers across all resume files in `data/`.
+
+```bash
+# Install deps (from repo root, with the active env)
+pip install docling markitdown unstructured pymupdf pdfplumber python-docx
+
+# Run benchmark (writes src/benchmarking/results/raw_results.json)
+python -m src.benchmarking.benchmark_runner
+
+# Generate CSV + HTML report
+python -m src.benchmarking.report_generator
+```
+
+Parsers: **Docling** (IBM), **MarkItDown** (Microsoft), **Unstructured**, **PyMuPDF**, **pdfplumber**, **python-docx**.
+
+Metrics computed per file × parser:
+- Text quality: word count, char count, heading count, table rows, blank-line ratio
+- Field detection: email, phone, URL, section coverage (20 resume section keywords)
+- Layout: ROUGE-1 recall/precision/F1 vs `.txt` reference when available
+- Performance: wall-clock time (s), peak memory (MB)
+
+Results land in `src/benchmarking/results/` (gitignored). The HTML report includes a colour-coded heatmap.
+
+**Adding a new parser**: subclass `BaseParser` in `src/benchmarking/parsers/`, implement `name`, `supports()`, and `_parse()`, then add the class to `_PARSER_CLASSES` in `parsers/__init__.py`.
+
 ## Key files
 
 | File | Purpose |
@@ -92,3 +120,6 @@ config/       → Pydantic BaseSettings (env-driven) + externalized prompts.yaml
 | `src/llm_based/services/parser_service.py` | Top-level orchestration for single and batch parsing |
 | `src/llm_based/example_usage.py` | End-to-end wiring example |
 | `src/.env.example` | Template for required environment variables |
+| `src/benchmarking/benchmark_runner.py` | Run all parsers across all data files |
+| `src/benchmarking/report_generator.py` | Produce CSV + HTML benchmark report |
+| `src/benchmarking/parsers/base_parser.py` | ABC for adding new parsers |

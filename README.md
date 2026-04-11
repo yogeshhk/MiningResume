@@ -14,6 +14,7 @@ The primary objective is to convert unstructured resume text from formats like .
 * **Customizable Extraction**:  
   * Regex rules are configured in `src/rule_based/regex_config.xml`—no Python changes needed.  
   * LLM extraction attributes and other configuration options available via `src/.env` file.
+* **Parser Benchmarking** (`src/benchmarking/`): Compare six open-source document-parsing libraries (Docling, MarkItDown, Unstructured, PyMuPDF, pdfplumber, python-docx) across all sample resumes, with automated metrics and a colour-coded HTML report.
 
 ## **📂 Project Structure**
 
@@ -21,9 +22,7 @@ The repository uses a modular src-based layout:
 
 ```
 .
-├── data/
-│   ├── YogeshKulkarniLinkedInProfile.pdf   # Sample resume (add your files here)
-│   └── ...
+├── data/                                   # Sample resumes (PDF, DOCX, TXT)
 ├── src/
 │   ├── llm_based/                          # LLM-based parsing architecture
 │   │   ├── core/                           # Interfaces, models, exceptions
@@ -32,12 +31,19 @@ The repository uses a modular src-based layout:
 │   │   ├── utils/                          # Logging, validators, retry, metrics
 │   │   ├── config/                         # Settings and prompts.yaml
 │   │   ├── example_usage.py                # Example wiring
-│   │   └── README.md                       # Package-level docs
+│   │   └── README.md
 │   ├── rule_based/                         # Rule-based (regex) parser
 │   │   ├── regex_resume_parser.py
 │   │   └── regex_config.xml
+│   ├── benchmarking/                       # Parser benchmarking suite
+│   │   ├── parsers/                        # One wrapper per library
+│   │   ├── metrics/                        # text, field, and perf metrics
+│   │   ├── benchmark_runner.py             # Run all parsers across data/
+│   │   ├── report_generator.py             # CSV + HTML heatmap report
+│   │   ├── pyproject.toml                  # Benchmarking deps
+│   │   └── results/                        # Output (gitignored)
 │   └── main.py                             # Minimal mode switch (rule vs llm)
-├── README.md                               # Root documentation
+├── README.md
 ├── LICENSE
 └── ...
 ```
@@ -116,6 +122,43 @@ This design allows for easy adaptation to different resume formats or extraction
 
 ### Entry Point
 - `src/main.py`: minimal mode switch to run rule-based or LLM-based flows and print JSON output
+
+### Benchmarking (`src/benchmarking/`)
+
+Compares six open-source, free document-parsing libraries on all resume files in `data/`:
+
+| Library | Formats | Notes |
+|---------|---------|-------|
+| **Docling** (IBM) | PDF, DOCX, PPTX, HTML | OCR, tables, layout-aware |
+| **MarkItDown** (Microsoft) | PDF, DOCX, XLSX, PPTX | Fast, multi-format Markdown output |
+| **Unstructured** | PDF, DOCX, TXT, HTML | Layout chunking; format-specific partitions |
+| **PyMuPDF** | PDF | Fastest (0.01s/file); native C++ extraction |
+| **pdfplumber** | PDF | Precise column + table extraction |
+| **python-docx** | DOCX | Baseline; misses text-box content |
+
+Metrics per file × parser: word count, heading count, table rows, section coverage (20 keywords), email/phone/URL detection, ROUGE-1 vs `.txt` reference, parse time, peak memory.
+
+```bash
+# Install benchmarking deps
+pip install docling markitdown unstructured pymupdf pdfplumber python-docx
+
+# Run (writes src/benchmarking/results/raw_results.json)
+python -m src.benchmarking.benchmark_runner
+
+# Generate report.csv + report.html
+python -m src.benchmarking.report_generator
+```
+
+**Results snapshot** (12 resume files, 56 runs):
+
+| Parser | Success | Avg Words | Avg Time | Avg Sections |
+|--------|--------:|----------:|---------:|-------------:|
+| Docling | 100% | 357 | 3.1s | 5.6 |
+| MarkItDown | 100% | 352 | 0.4s | 5.6 |
+| PyMuPDF | 100% | 406 | 0.01s | 5.9 |
+| pdfplumber | 100% | 405 | 0.6s | 5.8 |
+| Unstructured | 83% | 373 | 1.2s | 5.6 |
+| python-docx | 50% | 262 | 0.01s | 4.5 |
 
 ## **🧪 Testing**
 

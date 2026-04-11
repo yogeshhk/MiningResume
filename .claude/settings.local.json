@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ':*)",
+      "Bash(pip install:*)",
+      "Bash(python -c \"import fitz; print\\('pymupdf OK'\\)\")",
+      "Bash(python -c \"import pdfplumber; print\\('pdfplumber OK'\\)\")",
+      "Bash(python -c \"from unstructured.partition.auto import partition; print\\('unstructured OK'\\)\")",
+      "Bash(python -c \"import unstructured; print\\(unstructured.__version__\\)\")",
+      "Bash(python -c \"from unstructured.partition.text import partition_text; elems = partition_text\\(text='hello world\\\\nSkills: Python'\\); print\\([str\\(e\\) for e in elems]\\)\")",
+      "Bash(python -c \"from unstructured.partition.docx import partition_docx; print\\('docx ok'\\)\")",
+      "Bash(python -m src.benchmarking.benchmark_runner)",
+      "Bash(python -m src.benchmarking.report_generator)"
+    ]
+  }
+}
